@@ -1,0 +1,38 @@
+.nav-link.btn:hover {
+    color: white !important;
+}
+
+.btn {
+    background-color: #ff9933 !important; 
+    border-color: #ff9933 !important; 
+    color: white !important; 
+}
+
+.community-image {
+    height: 200px; 
+    object-fit: cover; 
+    width: 100%; 
+}
+
+.card {
+    border: none; 
+    box-shadow: none; 
+}
+
+.card-header {
+    background-color: transparent; 
+    border-bottom: none; 
+}
+
+.community-card {
+    cursor: pointer;
+}
+
+.community-card {
+    text-decoration: none;
+}
+
+a{
+    text-decoration: none;
+}
+
