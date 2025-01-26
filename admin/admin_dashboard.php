@@ -465,7 +465,7 @@ $showCommunityResult =  $conn->query($showCommunity);
                                     <div class="row g-0">
                                         <!-- Left Column: Community Image -->
                                         <div class="col-md-4">
-                                            <img src="<?php echo htmlspecialchars($row['image_path']); ?>"
+                                            <img src="../<?php echo htmlspecialchars($row['image_path']); ?>"
                                                 class="img-fluid rounded-start" alt="Community Image">
                                         </div>
                                         <!-- Right Column: Community Details -->

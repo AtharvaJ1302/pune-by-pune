@@ -151,7 +151,7 @@ if ($community_id) {
                         <h4 class="card-subtitle mb-2 text-muted">Organized By:</h4>
                         <p><?php echo htmlspecialchars($community_info['organized_by']); ?></p>
                         <h4 class="card-subtitle mb-2 text-muted">Banner Image:</h4>
-                        <img src="./uploads/<?php echo htmlspecialchars($community_info['image_path']); ?>" alt="Community Banner" class="img-fluid rounded">
+                        <img src="<?php echo htmlspecialchars($community_info['image_path']); ?>" alt="Community Banner" class="img-fluid rounded">
                     </div>
                 </div>
 
