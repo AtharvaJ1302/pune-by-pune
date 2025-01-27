@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $community_name = $_POST['name'];
     $community_description = $_POST['description'];
     $organized_by = $_POST['organized_by']; // Get the "Organized By" field
+    $location = $_POST['location']; // Get the "Location" field
 
     // Handling file upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
@@ -20,8 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (move_uploaded_file($imageTmpName, $imagePath)) {
             // Insert the community into the database
-            $sql = "INSERT INTO communities (community_name, community_description, image_path, user_id, admin, organized_by)
-                    VALUES ('$community_name', '$community_description', '$imagePath', '$user_id', TRUE, '$organized_by')";
+            $sql = "INSERT INTO communities (community_name, community_description, image_path, user_id, admin, organized_by, location)
+                    VALUES ('$community_name', '$community_description', '$imagePath', '$user_id', TRUE, '$organized_by', '$location')";
 
             if ($conn->query($sql) === TRUE) {
                 echo "<script>alert('Community Created');</script>";
@@ -37,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -64,6 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="organized_by" class="form-label">Organized By</label>
                     <input type="text" name="organized_by" id="organized_by" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="location" class="form-label">Location (City, State)</label>
+                    <input type="text" name="location" id="location" class="form-control" required>
                 </div>
 
                 <div class="mb-3">

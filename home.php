@@ -11,6 +11,24 @@ $sql = "SELECT communities.community_id, communities.community_name, communities
 
 $result = $conn->query($sql);
 
+$domains = "SELECT interest_id, interest_name FROM interest";
+$resultDomain = $conn->query($domains);
+
+$eventsQuery = "
+    SELECT event_id, event_name, event_description, event_time
+    FROM events
+    WHERE event_time >= NOW() -- Only fetch events that are upcoming
+    ORDER BY event_time ASC -- Sort by event time (soonest first)
+    LIMIT 6 -- Limit the results to 6
+";
+
+// Execute the query
+$eventResult = $conn->query($eventsQuery);
+
+if (!$eventResult) {
+    echo "Error fetching events: " . $conn->error;
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
@@ -28,97 +46,161 @@ $result = $conn->query($sql);
         .category-slider {
             display: flex;
             overflow-x: auto;
-            padding: 10px 0;
+            overflow-y: hidden;
+            white-space: nowrap;
+            padding: 10px;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+
+        .category-slider::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .category-slider::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .category-slider::-webkit-scrollbar-track {
+            background: #f1f1f1;
         }
 
         .category-box {
-            background-color: #f0f0f0;
-            padding: 20px;
-            margin-right: 15px;
+            flex: 0 0 auto;
+            border-radius: 5px;
+            padding: 40px;
             text-align: center;
-            border-radius: 8px;
-            min-width: 150px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            transition: transform 0.3s ease;
+            transition: transform 0.2s, background-color 0.2s;
+            color: #000000;
         }
 
         .category-box:hover {
             transform: scale(1.05);
         }
 
-        .category-slider::-webkit-scrollbar {
-            display: none;
-        }
-
-        .category-slider {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        .category-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
         }
 
         .card-text {
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 2 !important;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        #eventSlider {
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: thin;
+            /* Firefox scrollbar */
+            scrollbar-color: #888 transparent;
+        }
+
+        #eventSlider::-webkit-scrollbar {
+            height: 8px;
+            /* Height of the scrollbar */
+        }
+
+        #eventSlider::-webkit-scrollbar-thumb {
+            background-color: #888;
+            /* Scrollbar thumb color */
+            border-radius: 10px;
+        }
+
+        #eventSlider::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+
+        #eventSlider::-webkit-scrollbar-track {
+            background-color: transparent;
+            /* Scrollbar track color */
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg ">
-        <div class="container">
-            <a class="navbar-brand" href="#"><img src="./assets/pune-logo3.png" style="height:150px;"></a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="home.php">Home</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#communities">Communities</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#events">Events</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#profile">Profile</a></li>
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item"><a class="nav-link btn btn-danger ms-2 fw-bold text-dark" href="user_logout.php">Logout</a></li>
-                    <?php else: ?>
-                        <li class="nav-item"><a class="nav-link btn btn-primary fw-bold text-dark" href="user_login.php">Login</a></li>
-                        <li class="nav-item"><a class="nav-link btn btn-secondary ms-2 fw-bold text-dark" href="signup.php">Signup</a></li>
-                    <?php endif; ?>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <?php include('navbar.php') ?>
 
     <div class="container mt-4">
         <div class="row">
-            <aside class="col-md-3">
+            <aside class="col-md-3 mb-5">
                 <h3 class="mt-4">My Communities</h3>
                 <hr>
-                <ul class="list-unstyled">
-                    <li class="mb-2">🎨 Art Enthusiasts</li>
-                    <li class="mb-2">💻 Tech Innovators</li>
-                    <li class="mb-2">🌱 Eco Warriors</li>
-                </ul>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="create_community.php" class="btn btn-primary w-100">Create Community</a>
+                    <div>
+                        <h5>Created Communities</h5>
+                        <hr>
+                        <?php
+                        // Fetch created communities
+                        $userId = $_SESSION['user_id'];
+                        $createdQuery = "SELECT community_id, community_name FROM communities WHERE user_id = $userId AND status = 1";
+                        $createdResult = $conn->query($createdQuery);
+                        if ($createdResult->num_rows > 0):
+                            while ($row = $createdResult->fetch_assoc()):
+                        ?>
+                                <p><a href="community_info.php?community_id=<?php echo $row['community_id']; ?>"><?php echo htmlspecialchars($row['community_name']); ?></a></p>
+                        <?php
+                            endwhile;
+                        else:
+                            echo '<p>No created communities.</p>';
+                        endif;
+                        ?>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Joined Communities</h5>
+                        <hr>
+                        <?php
+                        // Fetch joined communities
+                        $joinedQuery = "SELECT communities.community_id, communities.community_name FROM community_members 
+                            JOIN communities ON community_members.community_id = communities.community_id 
+                            WHERE community_members.user_id = $userId";
+                        $joinedResult = $conn->query($joinedQuery);
+                        if ($joinedResult->num_rows > 0):
+                            while ($row = $joinedResult->fetch_assoc()):
+                        ?>
+                                <p><a href="community_info.php?community_id=<?php echo $row['community_id']; ?>"><?php echo htmlspecialchars($row['community_name']); ?></a></p>
+                        <?php
+                            endwhile;
+                        else:
+                            echo '<p>No joined communities.</p>';
+                        endif;
+                        ?>
+                    </div>
+
+                    <a href="create_community.php" class="btn btn-primary w-100 mt-4">Create Community</a>
                 <?php else: ?>
-                    <button class="btn btn-primary w-100" onclick="alert('Please log in to create a community!');">Create Community</button>
+                    <p>Please log in to view your communities.</p>
                 <?php endif; ?>
             </aside>
+
 
             <main class="col-md-9">
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="mb-0">Popular Communities</h2>
+                        <h2 class="mb-0">Communities</h2>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <?php if ($result->num_rows > 0): ?>
-                                <?php while ($row = $result->fetch_assoc()): ?>
+                            <?php
+                            $limit = 6; // Set the maximum number of cards to display
+                            $counter = 0;
+                            if ($result->num_rows > 0):
+                                while ($row = $result->fetch_assoc()) :
+                                    if ($counter >= $limit) break; // Stop after 6 communities
+                                    $counter++;
+                            ?>
                                     <div class="col-md-4 mb-4 d-flex">
                                         <a href="community_info.php?community_id=<?php echo $row['community_id']; ?>" class="community-card">
                                             <div class="card h-100 w-100">
-                                                <img src="<?php echo $row['image_path']; ?>" class="card-img-top community-image" alt="Community Image">
+                                                <img src="<?php echo $row['image_path']; ?>" class="card-img-top community-image" alt="Community Image" style="object-fit: contain; width: 90%; height: auto; border-radius: 15px;">
                                                 <div class="card-body d-flex flex-column">
                                                     <h5 class="card-title"><?php echo $row['community_name']; ?></h5>
                                                     <p class="card-text flex-grow-1"><?php echo $row['community_description']; ?></p>
@@ -130,6 +212,9 @@ $result = $conn->query($sql);
                                         </a>
                                     </div>
                                 <?php endwhile; ?>
+                                <div class="col-12 text-center">
+                                    <a href="all_communities.php" class="btn btn-primary">Explore</a>
+                                </div>
                             <?php else: ?>
                                 <p>No communities are available.</p>
                             <?php endif; ?>
@@ -137,59 +222,58 @@ $result = $conn->query($sql);
                     </div>
                 </div>
 
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">Upcoming Events</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="eventSlider" class="d-flex overflow-auto gap-3" style="white-space: nowrap; scroll-behavior: smooth;">
+                            <?php
+                            if ($eventResult->num_rows > 0):
+                                while ($row = $eventResult->fetch_assoc()):
+                                    $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                                    $colors = ['#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'];
+                                    $random_color = $colors[array_rand($colors)];
+                            ?>
+                                    <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="text-decoration-none">
+                                        <div class="card" style="min-width: 250px; max-width: 250px; display: inline-block; background-color: <?php echo $random_color; ?>;">
+                                            <div class="card-body">
+                                                <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                                <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; max-height: 3em;">
+                                                    <?php echo htmlspecialchars($row['event_description']); ?>
+                                                </p>
+                                                <span class="badge bg-info text-dark"><?php echo $formatted_time; ?></span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                <?php
+                                endwhile;
+                            else:
+                                ?>
+                                <p class="text-center">No upcoming events are available.</p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+
+
                 <div class="container my-4">
                     <h2 class="mb-4 text-center">Explore Categories</h2>
 
-                    <!-- Scrollable Category Slider -->
                     <div class="category-slider">
-                        <div class="category-box">
-                            <h5 class="category-title">Dance</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Music</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Education</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Sports</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">E-Sports</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Fitness</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Travel</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Art & Crafts</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Food</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Career</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Theatre</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Pets & Animals</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Health & Medical</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Book Clubs</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Gardening</h5>
-                        </div>
-                        <div class="category-box">
-                            <h5 class="category-title">Fashion</h5>
-                        </div>
+                        <?php
+                        if ($resultDomain->num_rows > 0) {
+                            while ($row = $resultDomain->fetch_assoc()) {
+                                echo '<div class="category-box">';
+                                echo '<h5 class="category-title">' . htmlspecialchars($row['interest_name']) . '</h5>';
+                                echo '</div>';
+                            }
+                        } else {
+                            echo '<p>No categories available.</p>';
+                        }
+                        ?>
                     </div>
 
                 </div>
@@ -199,75 +283,7 @@ $result = $conn->query($sql);
     </div>
 
 
-    <footer class="bg-dark text-light pt-4" style=" bottom: 0; width: 100%;">
-        <div class="container">
-            <div class="row mb-4">
-                <div class="col-12 mb-3">
-                    <h5>Create your own Meetup group.</h5>
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <a href="create_community.php" class="btn btn-outline-light">Get Started</a>
-                    <?php else: ?>
-                        <button class="btn btn-outline-light" onclick="alert('Please log in to create a community!');">Create Community</button>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="row">
-                <!-- Your Account Column -->
-                <div class="col-6 col-md-3 mb-3">
-                    <h6>Your Account</h6>
-                    <ul class="list-unstyled">
-                        <?php if (isset($_SESSION['user_id'])): ?>
-                            <li><a href="registration.php" class="text-light text-decoration-none">Logout</a></li>
-                        <?php else: ?>
-                            <li><a href="signup.php" class="text-light text-decoration-none">Sign up</a></li>
-                            <li><a href="user_login.php" class="text-light text-decoration-none">Log in</a></li>
-                        <?php endif; ?>
-                    </ul>
-                </div>
-
-                <!-- Discover Column -->
-                <div class="col-6 col-md-3 mb-3">
-                    <h6>Discover</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-light text-decoration-none">Groups</a></li>
-                    </ul>
-                </div>
-
-                <!-- Meetup Column -->
-                <div class="col-6 col-md-3 mb-3">
-                    <h6>Meetup</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-light text-decoration-none">About</a></li>
-                        <li><a href="#" class="text-light text-decoration-none">Contact Us</a></li>
-                    </ul>
-                </div>
-
-                <!-- Social and App Links Column -->
-                <div class="col-6 col-md-3 text-center">
-                    <h6>Follow us</h6>
-                    <div class="d-flex justify-content-center gap-2 mb-3">
-                        <ul class="list-inline">
-                            <li class="list-inline-item"><a href="#" class="text-light"><i class="fab fa-facebook"></i> Facebook</a></li>
-                            <li class="list-inline-item"><a href="#" class="text-light"><i class="fab fa-twitter"></i> Twitter</a></li>
-                            <li class="list-inline-item"><a href="#" class="text-light"><i class="fab fa-youtube"></i> YouTube</a></li>
-                            <li class="list-inline-item"><a href="#" class="text-light"><i class="fab fa-instagram"></i> Instagram</a></li>
-                        </ul>
-
-                    </div>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="#" class="btn btn-outline-light btn-sm">Get it on Google Play</a>
-                        <a href="#" class="btn btn-outline-light btn-sm">Download on the App Store</a>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-4 border-top pt-3">
-                <div class="col-12 text-center">
-                    <p>&copy; 2025 Pune By Pune | <a href="#" class="text-light text-decoration-none">Terms of Service</a> | <a href="#" class="text-light text-decoration-none">Privacy Policy</a> | <a href="#" class="text-light text-decoration-none">Cookie Policy</a></p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
+    <?php include('footer.php') ?>
 
     <script>
         const checkboxes = document.querySelectorAll('.interest-checkbox');
@@ -282,6 +298,46 @@ $result = $conn->query($sql);
                 }
             });
         });
+
+        function getRandomColor() {
+            const letters = "89ABCDEF"; // Restrict to higher values for softer colors
+            let color = "#";
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * letters.length)];
+            }
+            return color;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const categoryBoxes = document.querySelectorAll(".category-box");
+            categoryBoxes.forEach(box => {
+                box.style.backgroundColor = getRandomColor();
+            });
+        });
+
+        const slider = document.getElementById("eventSlider");
+
+        function autoScroll() {
+            slider.scrollBy({
+                left: 1,
+                behavior: "smooth"
+            });
+
+            // Loop the scroll back to the start when reaching the end
+            if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth) {
+                slider.scrollTo({
+                    left: 0,
+                    behavior: "smooth"
+                });
+            }
+        }
+
+        // Auto-scroll every 30ms
+        let autoScrollInterval = setInterval(autoScroll, 30);
+
+        // Pause auto-scroll on hover and resume on mouse leave
+        slider.addEventListener("mouseenter", () => clearInterval(autoScrollInterval));
+        slider.addEventListener("mouseleave", () => autoScrollInterval = setInterval(autoScroll, 30));
     </script>
 </body>
 

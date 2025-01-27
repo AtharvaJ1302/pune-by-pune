@@ -109,7 +109,7 @@ if (isset($_POST['update_skill_id']) && isset($_POST['update_skill_name'])) {
     exit;
 }
 
-$showCommunity = "SELECT c.community_id, c.community_name, c.image_path, c.user_id AS admin_id, c.organized_by, 
+$showCommunity = "SELECT c.community_id, c.community_name, c.image_path, c.user_id AS admin_id, c.organized_by,c.location, 
         (SELECT COUNT(*) FROM community_members cm WHERE cm.community_id = c.community_id) AS member_count,
         (SELECT name FROM users u WHERE u.user_id = c.user_id) AS admin_name,
         c.status
@@ -464,9 +464,9 @@ $showCommunityResult =  $conn->query($showCommunity);
                                 <div class="card shadow">
                                     <div class="row g-0">
                                         <!-- Left Column: Community Image -->
-                                        <div class="col-md-4">
+                                        <div class="col-md-4 d-flex justify-content-center align-items-center">
                                             <img src="../<?php echo htmlspecialchars($row['image_path']); ?>"
-                                                class="img-fluid rounded-start" alt="Community Image">
+                                                class="img-fluid" alt="Community Image" style="border-radius: 15px; width: 100%; max-width: 100%; height: auto; margin-left: 15px">
                                         </div>
                                         <!-- Right Column: Community Details -->
                                         <div class="col-md-8">
@@ -479,7 +479,8 @@ $showCommunityResult =  $conn->query($showCommunity);
                                                     <strong>Status:</strong>
                                                     <span class="badge <?php echo $row['status'] ? 'bg-success' : 'bg-danger'; ?>">
                                                         <?php echo $row['status'] ? 'Active' : 'Disabled'; ?>
-                                                    </span>
+                                                    </span><br>
+                                                    <strong>Location:</strong><?php echo htmlspecialchars($row['location']); ?>
                                                 </p>
                                                 <!-- Disable/Enable Form -->
                                                 <form action="community_status.php" method="POST" class="d-inline">

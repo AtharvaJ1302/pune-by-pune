@@ -62,6 +62,19 @@ GROUP BY u.user_id, u.name, u.age, s.state_name, c.city_name, p.pincode
 
 
 $members_result = $conn->query($members_sql);
+
+
+$current_time = date('Y-m-d H:i:s'); // Get the current time
+$eventQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
+                             (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                      FROM events e
+                      WHERE e.event_time > ? AND e.community_id = ?
+                      ORDER BY e.event_time ASC";
+
+$stmt = $conn->prepare($eventQuery);
+$stmt->bind_param("si", $current_time, $community_id);
+$stmt->execute();
+$eventResult = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -75,13 +88,36 @@ $members_result = $conn->query($members_sql);
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="./CSS/home.css">
 </head>
+<style>
+    .attendees-images img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: -10px;
+        border: 2px solid white;
+    }
+
+    .attendees-count {
+        font-weight: 600;
+        background-color: blue;
+        color: white;
+        border-radius: 15px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+</style>
 
 <body>
     <?php include('navbar.php') ?>
     <div class="container mt-4">
         <div class="row g-0">
             <!-- Left Section -->
-            <div class="col-md-4 bg-warning text-center d-flex align-items-center justify-content-center position-relative p-4" style="background: url('<?php echo $community['image_path']; ?>'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+            <div class="col-md-4 bg-warning text-center d-flex align-items-center justify-content-center position-relative p-4" style="background: url('<?php echo $community['image_path']; ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; height:auto;">
                 <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
                 <div class="bg-opacity-75 text-center rounded position-relative">
                     <h1 class="text-white fw-bold"><?php echo $community['community_name']; ?></h1>
@@ -94,7 +130,7 @@ $members_result = $conn->query($members_sql);
                     <h3 class="fw-bold"><?php echo $community['community_name']; ?></h3>
                     <ul class="list-unstyled">
                         <li class="mb-2">
-                            <i class="bi bi-geo-alt-fill text-danger me-2">Pune, Maharashtra</i>
+                            <i class="bi bi-geo-alt-fill text-danger me-2"><?php echo $community['location']; ?></i>
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-people-fill text-primary me-2"><?php echo $community['member_count']; ?> members</i>
@@ -141,9 +177,59 @@ $members_result = $conn->query($members_sql);
 
                 <!-- Events Section -->
                 <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
-                    <h5 class="fw-bold">Upcoming events (0)</h5>
-                    <p>No upcoming events yet.</p>
+                    <?php
+                    // Fetch the number of upcoming events for the specific community
+                    $eventCountQuery = "SELECT COUNT(*) AS event_count FROM events WHERE community_id = ?";
+                    $stmt = $conn->prepare($eventCountQuery);
+
+                    if ($stmt) {
+                        $stmt->bind_param("i", $community_id); // Assuming $community_id is set
+                        $stmt->execute();
+                        $result = $stmt->get_result();
+                        $row = $result->fetch_assoc();
+                        $eventCount = $row['event_count'];
+                        $stmt->close();
+                    } else {
+                        $eventCount = 0;
+                    }
+                    ?>
+
+                    <h5 class="fw-bold">Upcoming events (<?php echo $eventCount; ?>)</h5>
+
+                    <div class="container mt-5 mb-5">
+                        <?php if ($eventResult->num_rows > 0) {
+                            while ($row = $eventResult->fetch_assoc()) {
+                                // Format the event time
+                                $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                        ?>
+                                <div class="card shadow-lg p-3 mb-4">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div>
+                                                <h6 class="text-uppercase text-muted mb-1"><?php echo $formatted_time; ?></h6>
+                                                <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <a href="event_info.php" class="btn btn-outline-primary">View Event</a>
+                                            </div>
+                                        </div>
+                                        <p class="card-text mb-3">
+                                            <?php echo htmlspecialchars($row['event_description']); ?>
+                                        </p>
+                                        <div class="d-flex align-items-center">
+                                            <span class="ms-3 attendees-count"><?php echo $row['attendees_count']; ?> attendees</span>
+                                        </div>
+                                    </div>
+                                </div>
+                        <?php
+                            }
+                        } else {
+                            echo "<p class='text-center text-muted'>No upcoming events found.</p>";
+                        }
+                        ?>
+                    </div>
                 </div>
+
 
                 <!-- Members Section -->
                 <div class="tab-pane fade mb-5" id="members" role="tabpanel" aria-labelledby="members-tab">

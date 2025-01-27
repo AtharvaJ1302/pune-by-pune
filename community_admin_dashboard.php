@@ -43,6 +43,32 @@ if ($community_id) {
         exit;
     }
 }
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
+    // Sanitize user input
+    $community_id = intval($_POST['community_id']);
+    $event_name = $conn->real_escape_string($_POST['event_name']);
+    $event_description = $conn->real_escape_string($_POST['event_description']);
+    $event_time = $conn->real_escape_string($_POST['event_time']);
+
+    // Insert event data into the events table
+    $sql = "INSERT INTO events (community_id, event_name, event_description, event_time) 
+            VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt) {
+        $stmt->bind_param("isss", $community_id, $event_name, $event_description, $event_time);
+
+        if ($stmt->execute()) {
+            echo "<script>alert('Event created successfully.');</script>";
+        } else {
+            echo "<script>alert('Error: Unable to create the event.');</script>";
+        }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Database error: Unable to prepare statement.');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -215,8 +241,61 @@ if ($community_id) {
         </div>
 
         <div id="create_event" class="section">
-            <h1>Event Creation</h1>
+            <h1 class="mb-4">Event Creation</h1>
+            <form action="" method="POST">
+                <div class="mb-3">
+                    <label for="community_id" class="form-label">Community:</label>
+                    <select name="community_id" id="community_id" class="form-select" required>
+                        <?php
+                        if ($community_id) {
+                            $query = "SELECT community_id, community_name FROM communities WHERE community_id = ?";
+                            $stmt = $conn->prepare($query);
+
+                            if ($stmt) {
+                                $stmt->bind_param("i", $community_id);
+                                $stmt->execute();
+                                $result = $stmt->get_result();
+
+                                if ($result->num_rows > 0) {
+                                    while ($row = $result->fetch_assoc()) {
+                                        echo "<option value='{$row['community_id']}' selected>{$row['community_name']}</option>";
+                                    }
+                                } else {
+                                    echo "<option value=''>Community not found</option>";
+                                }
+
+                                $stmt->close();
+                            } else {
+                                echo "<option value=''>Database error</option>";
+                            }
+                        } else {
+                            echo "<option value=''>Invalid Community ID</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="event_name" class="form-label">Event Name:</label>
+                    <input type="text" id="event_name" name="event_name" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="event_description" class="form-label">Event Description:</label>
+                    <textarea id="event_description" name="event_description" class="form-control" rows="4" required></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="event_time" class="form-label">Event Time:</label>
+                    <input type="datetime-local" id="event_time" name="event_time" class="form-control" required>
+                </div>
+
+                <div>
+                    <button type="submit" name="create_event" class="btn btn-primary">Create Event</button>
+                </div>
+            </form>
         </div>
+
 
 
         <!-- Other sections -->
