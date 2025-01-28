@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 27, 2025 at 09:46 AM
+-- Generation Time: Jan 28, 2025 at 05:18 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -185,18 +185,18 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_description` text,
   `event_time` datetime NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `location` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`event_id`),
   KEY `community_id` (`community_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`) VALUES
-(1, 3, 'Dummy event', 'this is a trial event', '2025-01-28 13:00:00', '2025-01-27 07:15:46'),
-(2, 4, 'Java bootcamp', 'this is a java bootcamp', '2025-01-29 17:30:00', '2025-01-27 07:44:04'),
-(3, 3, 'python event 2', 'python event related to numpy', '2025-02-01 14:30:00', '2025-01-27 08:07:13');
+INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`, `location`) VALUES
+(5, 4, 'Java meetup', '<h2>Details</h2>\r\n\r\n<p>In collaboration with Nelkinda Software Craft and Equal Experts:</p>\r\n\r\n<p>This meetup is a combination of two talks<br />\r\n<em><strong>1. Why Learn Functional Programming by Anshul Chauhan.</strong></em><br />\r\nDuring this talk, we will learn about the Functional Programming paradigm. Anshul Chauhan will guide us through the basics and key vocabulary of functional programming. Through concrete examples, we will observe how Functional Programming can offer a compelling alternative to Object-Oriented Programming (OOP), potentially enhancing our daily coding tasks.</p>\r\n\r\n<p><em><strong>2. Singleton Paradox: Revisiting Advanced Java Through a Practical Lens by Nikhil Wanpal.</strong></em><br />\r\nSingleton design pattern ensures that only one object of a class exists at runtime. Is it really possible in Java though? During the course of this discussion, we attempt to implement a Singleton in Java and revisit aspects of Java like classes, static state, synchronisation, serialisation and class loading.</p>\r\n\r\n<p><strong>Agenda</strong></p>\r\n\r\n<ul>\r\n	<li>10:00 am - 10:15 am &ndash; Introduction</li>\r\n	<li>10:15 am - 11:00 am &ndash; Talk1: Why Learn Fucntional Programming.</li>\r\n	<li>11:00 am - 11:15 am &ndash; Q &amp; A session + Break 1</li>\r\n	<li>11:15 am - 12:25 pm &ndash; Talk 2: Singleton Paradox: Revisiting Advanced Java Through a Practical Lens.</li>\r\n	<li>12:25 pm - 01:30 pm &ndash; Talk 2 + Q&amp;A</li>\r\n	<li>01:30 pm - 02:00 pm &ndash; Networking</li>\r\n</ul>\r\n\r\n<p>(collaborating meetup groups: Nelkinda Software Craft Pune Meetup, Expert Talks)<br />\r\n<br />\r\n<img alt=\"\" src=\"https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2019/07/EventHandling-In-Java.jpg\" style=\"height:175px; width:300px\" /></p>\r\n', '2025-01-28 09:32:00', '2025-01-28 04:03:03', 'Warje'),
+(4, 3, 'PyData Meetup 2025', '<h2><strong>Details</strong></h2>\r\n\r\n<p>Hello Pythonistas :)</p>\r\n\r\n<p>Happy New Year!</p>\r\n\r\n<p>This time we are having a free-flowing discussion about Python, Python libraries, projects, coding challenges, or anything else of your interest.</p>\r\n\r\n<p>The meetup welcomes Python novices as well as experts. If you need help with an existing project, bring it. If you want to interact with other Pythonistas, do join and say hello.</p>\r\n\r\n<p><strong>How to join?</strong></p>\r\n\r\n<p>Join this video conference link<br />\r\n[<a href=\"https://meet.jit.si/PythonPuneJan25\" target=\"_blank\">https://meet.jit.si/PythonPuneJan25</a>](https://meet.jit.si/PythonPuneJan25)</p>\r\n\r\n<p>Note: Every attendee should follow the PythonPune Code of Conduct during meetup [<a href=\"https://pythonpune.in/code-of-conduct\" target=\"_blank\">https://pythonpune.in/code-of-conduct</a>](https://pythonpune.in/code-of-conduct)</p>\r\n\r\n<p>----</p>\r\n\r\n<p>You are always welcome to talk about anything you are working on, be it a small Python program you wrote, or a new library you tried. Please create a GitHub issue.<br />\r\n[<a href=\"https://github.com/pythonpune/meetup-talks/issues/new/choose\" target=\"_blank\">https://github.com/pythonpune/meetup-talks/issues/new/choose</a>](https://github.com/pythonpune/meetup-talks/issues/new/choose)</p>\r\n', '2025-01-29 13:30:00', '2025-01-27 18:53:59', 'MITWPU, Pune');
 
 -- --------------------------------------------------------
 
