@@ -236,9 +236,9 @@ if (!$eventResult) {
                                     $random_color = $colors[array_rand($colors)];
                             ?>
                                     <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="text-decoration-none">
-                                        <div class="card" style="min-width: 250px; max-width: 250px; display: inline-block; background-color: <?php echo $random_color; ?>;">
+                                        <div class="card" style="min-width: 250px; max-width: 250px; display: inline-block; background-color: <?php echo $random_color; ?>; height: 150px">
                                             <div class="card-body">
-                                                <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                                <h5 class="card-title" style=" word-wrap: break-word; white-space: normal;"><?php echo htmlspecialchars($row['event_name']); ?></h5>
                                                 <p class="card-text text-truncate" style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                                                     <?php echo strip_tags($row['event_description'], '<b><i><strong>'); ?>
                                                 </p>

@@ -7,7 +7,7 @@ if (isset($_GET['event_id'])) {
     $event_id = intval($_GET['event_id']);
 
     // Fetch event details from the database
-    $sql = "SELECT e.event_name, e.event_description, e.event_time, e.community_id, c.community_name, c.location 
+    $sql = "SELECT e.event_name, e.event_description, e.event_time, e.community_id, c.community_name, e.location 
             FROM events e
             JOIN communities c ON e.community_id = c.community_id
             WHERE e.event_id = ?";
