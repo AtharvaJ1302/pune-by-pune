@@ -47,17 +47,18 @@ if ($community_id) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
     // Sanitize user input
     $community_id = intval($_POST['community_id']);
-    $event_name = $conn->real_escape_string($_POST['event_name']);
-    $event_description = $conn->real_escape_string($_POST['event_description']);
+    $event_name = $_POST['event_name'];
+    $event_description = $_POST['event_description'];
     $event_time = $conn->real_escape_string($_POST['event_time']);
+    $event_location = $_POST['event_location'];
 
     // Insert event data into the events table
-    $sql = "INSERT INTO events (community_id, event_name, event_description, event_time) 
-            VALUES (?, ?, ?, ?)";
+    $sql = "INSERT INTO events (community_id, event_name, event_description, event_time, location) 
+            VALUES (?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     if ($stmt) {
-        $stmt->bind_param("isss", $community_id, $event_name, $event_description, $event_time);
+        $stmt->bind_param("issss", $community_id, $event_name, $event_description, $event_time, $event_location);
 
         if ($stmt->execute()) {
             echo "<script>alert('Event created successfully.');</script>";
@@ -68,6 +69,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
     } else {
         echo "<script>alert('Database error: Unable to prepare statement.');</script>";
     }
+}
+
+if (isset($_GET['community_id'])) {
+    $community_id = intval($_GET['community_id']); // Ensure the ID is an integer for security
+
+    // Fetch the community details (optional, just to display community name)
+    $community_sql = "SELECT community_name FROM communities WHERE community_id = ?";
+    $stmt = $conn->prepare($community_sql);
+    $stmt->bind_param("i", $community_id);
+    $stmt->execute();
+    $community_result = $stmt->get_result();
+
+    if ($community_result->num_rows > 0) {
+        // Fetch the community name
+        $community = $community_result->fetch_assoc();
+    } else {
+        die("Community not found.");
+    }
+
+    // Fetch the events for the specific community
+    $event_sql = "SELECT event_id, event_name, event_time, event_description FROM events WHERE community_id = ?";
+    $event_stmt = $conn->prepare($event_sql);
+    $event_stmt->bind_param("i", $community_id);
+    $event_stmt->execute();
+    $event_result = $event_stmt->get_result();
+} else {
+    die("Invalid community ID.");
 }
 ?>
 
@@ -121,6 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
             display: block;
         }
     </style>
+    <script src="./ckeditor/ckeditor.js"></script>
 </head>
 
 <body>
@@ -290,10 +319,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
                     <input type="datetime-local" id="event_time" name="event_time" class="form-control" required>
                 </div>
 
+                <div class="mb-3">
+                    <label for="event_location" class="form-label">Event Location:</label>
+                    <input type="text" id="event_location" name="event_location" class="form-control" required>
+                </div>
+
                 <div>
                     <button type="submit" name="create_event" class="btn btn-primary">Create Event</button>
                 </div>
             </form>
+
+            <h3 class="display-4 mb-4 text-center">Events for <?php echo htmlspecialchars($community['community_name']); ?></h3>
+            <div class="container-sm mt-4" style="max-width: 720px;">
+                <div class="row">
+                    <?php
+                    // Check if events were found
+                    if ($event_result->num_rows > 0) {
+                        // Loop through the events and display them
+                        while ($event = $event_result->fetch_assoc()) {
+                    ?>
+
+                            <div class="col-md-6 mb-4">
+                                <div class="card shadow">
+                                    <div class="card-body d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title"><?php echo htmlspecialchars($event['event_name']); ?></h5>
+                                        <p><strong>Event Time:</strong> <?php echo date('d M Y h:i A', strtotime($event['event_time'])); ?></p>
+                                    </div>
+                                    <div class="ms-3 mb-3">
+                                        <a href="" class="btn btn-danger">End Event</a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                    <?php
+                        }
+                    } else {
+                        echo "<div class='col-md-12 mb-4'><p class='text-center'>No events found for this community.</p></div>";
+                    }
+                    ?>
+                </div>
+            </div>
         </div>
 
 
@@ -303,16 +369,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script>
+        CKEDITOR.replace('event_description');
+    </script>
     <script>
         function showSection(sectionId) {
-            // Hide all sections
             var sections = document.querySelectorAll('.section');
             sections.forEach(function(section) {
                 section.classList.remove('active-section');
             });
 
-            // Show the clicked section
             var activeSection = document.getElementById(sectionId);
             activeSection.classList.add('active-section');
         }

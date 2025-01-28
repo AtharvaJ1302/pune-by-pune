@@ -201,6 +201,7 @@ $eventResult = $stmt->get_result();
                             while ($row = $eventResult->fetch_assoc()) {
                                 // Format the event time
                                 $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                                $short_description = substr($row['event_description'], 0, 200) . (strlen($row['event_description']) > 200 ? "..." : "");
                         ?>
                                 <div class="card shadow-lg p-3 mb-4">
                                     <div class="card-body">
@@ -214,7 +215,7 @@ $eventResult = $stmt->get_result();
                                             </div>
                                         </div>
                                         <p class="card-text mb-3">
-                                            <?php echo htmlspecialchars($row['event_description']); ?>
+                                            <?php echo $short_description; ?>
                                         </p>
                                         <div class="d-flex align-items-center">
                                             <span class="ms-3 attendees-count"><?php echo $row['attendees_count']; ?> attendees</span>

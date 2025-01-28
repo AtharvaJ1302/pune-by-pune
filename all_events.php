@@ -7,10 +7,7 @@ $eventResult = $conn->query($sql);
 
 // Predefined set of light colors (avoiding dark colors)
 $colors = [
-    '#FFDDC1', '#FFABAB', '#FFC3A0', '#FF677D', '#D4A5A5',
-    '#392F5A', '#31A2AC', '#61C0BF', '#6B4226', '#D9BF77',
-    '#F1F1F1', '#F7C8D4', '#B0D0D3', '#F2A7B3', '#6A0572',
-    '#B8D8D8', '#E3A6B9', '#FF9F1C', '#F4A261', '#2A9D8F'
+   '#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'
 ];
 ?>
 
@@ -41,12 +38,12 @@ $colors = [
             ?>
                     <div class="col-md-4">
                         <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="text-decoration-none">
-                            <div class="card shadow-lg h-100" style="background-color: <?php echo $random_color; ?>;">
+                            <div class="card shadow-lg" style="background-color: <?php echo $random_color; ?>;height: 300px">
                                 <div class="card-body">
-                                    <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
-                                    <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; max-height: 3em;">
-                                        <?php echo htmlspecialchars($row['event_description']); ?>
-                                    </p>
+                                    <h5 class="card-title text-dark"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                    <p class="card-text text-truncate" style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 8; -webkit-box-orient: vertical; word-wrap: break-word; white-space: normal;">
+                                                    <?php echo strip_tags($row['event_description'], '<b><i><strong>'); ?>
+                                                </p>
                                     <span class="badge bg-info text-dark"><?php echo $formatted_time; ?></span>
                                 </div>
                             </div>

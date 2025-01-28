@@ -17,8 +17,7 @@ $resultDomain = $conn->query($domains);
 $eventsQuery = "
     SELECT event_id, event_name, event_description, event_time
     FROM events
-    WHERE event_time >= NOW() -- Only fetch events that are upcoming
-    ORDER BY event_time ASC -- Sort by event time (soonest first)
+    ORDER BY event_time DESC 
     LIMIT 6 -- Limit the results to 6
 ";
 
@@ -240,8 +239,8 @@ if (!$eventResult) {
                                         <div class="card" style="min-width: 250px; max-width: 250px; display: inline-block; background-color: <?php echo $random_color; ?>;">
                                             <div class="card-body">
                                                 <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
-                                                <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; max-height: 3em;">
-                                                    <?php echo htmlspecialchars($row['event_description']); ?>
+                                                <p class="card-text text-truncate" style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                                    <?php echo strip_tags($row['event_description'], '<b><i><strong>'); ?>
                                                 </p>
                                                 <span class="badge bg-info text-dark"><?php echo $formatted_time; ?></span>
                                             </div>
@@ -256,6 +255,7 @@ if (!$eventResult) {
                         </div>
                     </div>
                 </div>
+
 
 
 
@@ -317,25 +317,20 @@ if (!$eventResult) {
 
         const slider = document.getElementById("eventSlider");
 
+
         function autoScroll() {
+            if (slider.scrollLeft >= slider.scrollWidth / 2) {
+                slider.scrollLeft = 0;
+            }
+
             slider.scrollBy({
                 left: 1,
                 behavior: "smooth"
             });
-
-            // Loop the scroll back to the start when reaching the end
-            if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth) {
-                slider.scrollTo({
-                    left: 0,
-                    behavior: "smooth"
-                });
-            }
         }
 
-        // Auto-scroll every 30ms
         let autoScrollInterval = setInterval(autoScroll, 30);
 
-        // Pause auto-scroll on hover and resume on mouse leave
         slider.addEventListener("mouseenter", () => clearInterval(autoScrollInterval));
         slider.addEventListener("mouseleave", () => autoScrollInterval = setInterval(autoScroll, 30));
     </script>
