@@ -2,11 +2,9 @@
 include 'connection.php';
 session_start();
 
-// Get the community_id from the query string
 $community_id = isset($_GET['community_id']) ? $_GET['community_id'] : null;
 
 if ($community_id) {
-    // Query to get the users who have joined the community
     $sql = "
         SELECT u.name, u.age, s.state_name, c.city_name, p.pincode, GROUP_CONCAT(sk.skill_name) AS skills
         FROM users u
@@ -28,7 +26,6 @@ if ($community_id) {
 }
 
 if ($community_id) {
-    // Fetch community details
     $community_sql = "
         SELECT community_name, community_description, organized_by, image_path
         FROM communities
@@ -45,20 +42,23 @@ if ($community_id) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
-    // Sanitize user input
     $community_id = intval($_POST['community_id']);
     $event_name = $_POST['event_name'];
     $event_description = $_POST['event_description'];
     $event_time = $conn->real_escape_string($_POST['event_time']);
     $event_location = $_POST['event_location'];
 
-    // Insert event data into the events table
-    $sql = "INSERT INTO events (community_id, event_name, event_description, event_time, location) 
-            VALUES (?, ?, ?, ?, ?)";
+    $state_id = intval($_POST['state_id']);
+    $city_id = intval($_POST['city_id']);
+    $pincode_id = intval($_POST['pincode_id']);
+
+    $sql = "INSERT INTO events (community_id, event_name, event_description, event_time, location, state_id, city_id, pincode_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     if ($stmt) {
-        $stmt->bind_param("issss", $community_id, $event_name, $event_description, $event_time, $event_location);
+        // Bind the parameters (including state_id, city_id, pincode_id)
+        $stmt->bind_param("issssiii", $community_id, $event_name, $event_description, $event_time, $event_location, $state_id, $city_id, $pincode_id);
 
         if ($stmt->execute()) {
             echo "<script>alert('Event created successfully.');</script>";
@@ -72,9 +72,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
 }
 
 if (isset($_GET['community_id'])) {
-    $community_id = intval($_GET['community_id']); // Ensure the ID is an integer for security
+    $community_id = intval($_GET['community_id']); 
 
-    // Fetch the community details (optional, just to display community name)
     $community_sql = "SELECT community_name FROM communities WHERE community_id = ?";
     $stmt = $conn->prepare($community_sql);
     $stmt->bind_param("i", $community_id);
@@ -82,13 +81,11 @@ if (isset($_GET['community_id'])) {
     $community_result = $stmt->get_result();
 
     if ($community_result->num_rows > 0) {
-        // Fetch the community name
         $community = $community_result->fetch_assoc();
     } else {
         die("Community not found.");
     }
 
-    // Fetch the events for the specific community
     $event_sql = "SELECT event_id, event_name, event_time, event_description FROM events WHERE community_id = ?";
     $event_stmt = $conn->prepare($event_sql);
     $event_stmt->bind_param("i", $community_id);
@@ -153,7 +150,6 @@ if (isset($_GET['community_id'])) {
 </head>
 
 <body>
-    <!-- Sidebar -->
     <div class="sidebar">
         <a class="navbar-brand" href="javascript:void(0)" onclick="showSection('dashboard')">Admin Dashboard</a>
         <ul class="nav flex-column mt-3">
@@ -321,7 +317,37 @@ if (isset($_GET['community_id'])) {
 
                 <div class="mb-3">
                     <label for="event_location" class="form-label">Event Location:</label>
-                    <input type="text" id="event_location" name="event_location" class="form-control" required>
+                    <div class="mb-3">
+                        <label for="event_location" class="form-label">Area:</label>
+                        <input type="text" id="event_location" name="event_location" class="form-control" rows="4" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="state_id" class="form-label">State:</label>
+                        <select name="state_id" id="state_id" class="form-select" required>
+                            <option value="">Select State</option>
+                            <?php
+                            $state_query = "SELECT state_id, state_name FROM States";
+                            $state_result = $conn->query($state_query);
+                            while ($state = $state_result->fetch_assoc()) {
+                                echo "<option value='{$state['state_id']}'>{$state['state_name']}</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="city_id" class="form-label">City:</label>
+                        <select name="city_id" id="city_id" class="form-select" required>
+                            <option value="">Select City</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pincode_id" class="form-label">Pincode:</label>
+                        <select name="pincode_id" id="pincode_id" class="form-select" required>
+                            <option value="">Select Pincode</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
@@ -333,9 +359,7 @@ if (isset($_GET['community_id'])) {
             <div class="container-sm mt-4" style="max-width: 720px;">
                 <div class="row">
                     <?php
-                    // Check if events were found
                     if ($event_result->num_rows > 0) {
-                        // Loop through the events and display them
                         while ($event = $event_result->fetch_assoc()) {
                     ?>
 
@@ -361,11 +385,6 @@ if (isset($_GET['community_id'])) {
                 </div>
             </div>
         </div>
-
-
-
-        <!-- Other sections -->
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -383,14 +402,49 @@ if (isset($_GET['community_id'])) {
             activeSection.classList.add('active-section');
         }
 
-        function confirmDeleteCommunity(community_id) {
-            // Ask for confirmation
-            var confirmDelete = confirm("Are you sure you want to delete this community? This action cannot be undone.");
-            if (confirmDelete) {
-                // Redirect to the delete_community.php with the community_id
-                window.location.href = 'delete_community.php?community_id=' + community_id;
+        document.getElementById('state_id').addEventListener('change', function() {
+            const stateId = this.value; 
+            const cityDropdown = document.getElementById('city_id'); 
+
+            cityDropdown.innerHTML = '<option value="">Select City</option>';
+
+            if (stateId) {
+                fetch(`get_cities.php?state_id=${stateId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(city => {
+                            const option = document.createElement('option');
+                            option.value = city.city_id;
+                            option.textContent = city.city_name;
+                            cityDropdown.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching cities:', error));
             }
-        }
+        });
+
+        document.getElementById('city_id').addEventListener('change', function() {
+            const cityId = this.value; 
+            const pincodeDropdown = document.getElementById('pincode_id'); 
+
+            pincodeDropdown.innerHTML = '<option value="">Select Pincode</option>';
+
+            if (cityId) {
+                fetch(`get_pincode.php?city_id=${cityId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(pincode => {
+                            const option = document.createElement('option');
+                            option.value = pincode.pincode_id;
+                            option.textContent = pincode.pincode;
+                            pincodeDropdown.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching pincodes:', error));
+            }
+        });
+
+
 
         window.onbeforeunload = function() {
             window.location.href = "community_info.php";

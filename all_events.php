@@ -2,11 +2,9 @@
 session_start();
 include 'connection.php';
 
-// Fetch all events from the database
 $sql = "SELECT event_id, event_name, event_description, event_time FROM events ORDER BY event_time DESC";
 $eventResult = $conn->query($sql);
 
-// Predefined set of light colors (avoiding dark colors)
 $colors = [
    '#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'
 ];
@@ -32,7 +30,6 @@ $colors = [
             <?php
             if ($eventResult->num_rows > 0):
                 while ($row = $eventResult->fetch_assoc()):
-                    // Format the event date
                     $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
 
                     $random_color = $colors[array_rand($colors)];

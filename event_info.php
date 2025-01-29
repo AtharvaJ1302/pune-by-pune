@@ -1,12 +1,10 @@
 <?php
-// Include the database connection file
+session_start();
 include 'connection.php';
 
-// Fetch the event ID from the URL
 if (isset($_GET['event_id'])) {
     $event_id = intval($_GET['event_id']);
 
-    // Fetch event details from the database
     $sql = "SELECT e.event_name, e.event_description, e.event_time, e.community_id, c.community_name, e.location 
             FROM events e
             JOIN communities c ON e.community_id = c.community_id
@@ -27,9 +25,8 @@ if (isset($_GET['event_id'])) {
 
 date_default_timezone_set('Asia/Kolkata');
 
-// Format the event_time to 12-hour format with AM/PM
 $event_time_ist = new DateTime($event['event_time']);
-$formatted_event_time = $event_time_ist->format('h:i A'); // 12-hour format with AM/PM
+$formatted_event_time = $event_time_ist->format('h:i A'); 
 $formatted_event_date = $event_time_ist->format('l, jS F Y');
 ?>
 
@@ -64,16 +61,14 @@ $formatted_event_date = $event_time_ist->format('l, jS F Y');
 
 <body>
     <?php include('navbar.php') ?>
-    <div class="container my-4 bg-body-tertiary" style="padding-bottom: 40px;"> <!-- Add margin-bottom here -->
+    <div class="container my-4 bg-body-tertiary" style="padding-bottom: 40px;"> 
         <div class="row">
-            <!-- Left Column -->
             <div class="col-md-8 left-column">
                 <img src="path_to_event_image.jpg" alt="Event Image" class="img-fluid rounded mb-3">
                 <h2 class="fw-bold"><?php echo htmlspecialchars($event['event_name']); ?></h2>
                 <p><?php echo $event['event_description']; ?></p>
             </div>
 
-            <!-- Right Column -->
             <div class="col-md-4 right-column">
                 <!-- Community Card -->
                 <div class="card mb-3 mt-3 border">
@@ -96,7 +91,6 @@ $formatted_event_date = $event_time_ist->format('l, jS F Y');
         </div>
     </div>
 
-    <!-- Sticky Bottom Navbar -->
     <div class="sticky-bottom-nav d-flex justify-content-between align-items-center">
         <div>
             <span class="fw-bold"><?php echo htmlspecialchars($formatted_event_date); ?> <?php echo htmlspecialchars($formatted_event_time); ?></span><br>

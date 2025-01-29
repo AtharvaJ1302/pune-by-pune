@@ -30,7 +30,7 @@ if ($result_check->num_rows > 0) {
 $sql_join = "INSERT INTO community_members (user_id, community_id) VALUES ('$user_id', '$community_id')";
 if ($conn->query($sql_join) === TRUE) {
     echo "You have successfully joined the community!";
-    header("Location: community_info.php?community_id=" . $community_id); // Redirect back to the community page
+    header("Location: community_info.php?community_id=" . $community_id); 
     exit();
 } else {
     echo "Error: " . $conn->error;

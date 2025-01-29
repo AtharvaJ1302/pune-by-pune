@@ -1,26 +1,22 @@
 <?php
 include 'connection.php'; 
 
-// Check if the user is logged in and get the user_id from the session
 session_start();
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Get community details from the form
     $community_name = $_POST['name'];
     $community_description = $_POST['description'];
-    $organized_by = $_POST['organized_by']; // Get the "Organized By" field
-    $location = $_POST['location']; // Get the "Location" field
+    $organized_by = $_POST['organized_by'];
+    $location = $_POST['location']; 
 
-    // Handling file upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $imageTmpName = $_FILES['image']['tmp_name'];
         $imageName = basename($_FILES['image']['name']);
-        $imageFolder = "uploads/"; // Directory to store uploaded images
+        $imageFolder = "uploads/"; 
         $imagePath = $imageFolder . $imageName;
 
         if (move_uploaded_file($imageTmpName, $imagePath)) {
-            // Insert the community into the database
             $sql = "INSERT INTO communities (community_name, community_description, image_path, user_id, admin, organized_by, location)
                     VALUES ('$community_name', '$community_description', '$imagePath', '$user_id', TRUE, '$organized_by', '$location')";
 

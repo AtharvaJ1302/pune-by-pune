@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 28, 2025 at 05:18 AM
+-- Generation Time: Jan 29, 2025 at 05:26 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -78,42 +78,6 @@ INSERT INTO `cities` (`city_id`, `city_name`, `state_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `city`
---
-
-DROP TABLE IF EXISTS `city`;
-CREATE TABLE IF NOT EXISTS `city` (
-  `city_id` int NOT NULL AUTO_INCREMENT,
-  `city_name` varchar(200) NOT NULL,
-  `state_id` varchar(100) NOT NULL,
-  PRIMARY KEY (`city_id`),
-  KEY `state_id` (`state_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `city`
---
-
-INSERT INTO `city` (`city_id`, `city_name`, `state_id`) VALUES
-(1, 'Mumbai', '1'),
-(2, 'Pune', '1'),
-(3, 'Nagpur', '1'),
-(4, 'Bengaluru', '2'),
-(5, 'Mysuru', '2'),
-(6, 'Hubli', '2'),
-(7, 'Chennai', '3'),
-(8, 'Coimbatore', '3'),
-(9, 'Madurai', '3'),
-(10, 'Kolkata', '4'),
-(11, 'Howrah', '4'),
-(12, 'Siliguri', '4'),
-(13, 'Ahmedabad', '5'),
-(14, 'Surat', '5'),
-(15, 'Vadodara', '5');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `communities`
 --
 
@@ -158,18 +122,20 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   `user_id` int NOT NULL,
   `community_id` int NOT NULL,
   `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('pending','accepted','rejected') DEFAULT 'pending',
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`community_id`),
   KEY `fk_community_id` (`community_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `community_members`
 --
 
-INSERT INTO `community_members` (`id`, `user_id`, `community_id`, `joined_at`) VALUES
-(11, 11, 7, '2025-01-27 05:49:59'),
-(10, 12, 3, '2025-01-26 17:33:11');
+INSERT INTO `community_members` (`id`, `user_id`, `community_id`, `joined_at`, `status`) VALUES
+(11, 11, 7, '2025-01-27 05:49:59', 'pending'),
+(10, 12, 3, '2025-01-26 17:33:11', 'pending'),
+(12, 13, 3, '2025-01-28 09:01:12', 'pending');
 
 -- --------------------------------------------------------
 
@@ -186,17 +152,25 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_time` datetime NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `location` varchar(255) DEFAULT NULL,
+  `state_id` int NOT NULL,
+  `city_id` int NOT NULL,
+  `pincode_id` int NOT NULL,
   PRIMARY KEY (`event_id`),
-  KEY `community_id` (`community_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `community_id` (`community_id`),
+  KEY `fk_state` (`state_id`),
+  KEY `fk_city` (`city_id`),
+  KEY `fk_pincode` (`pincode_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`, `location`) VALUES
-(5, 4, 'Java meetup', '<h2>Details</h2>\r\n\r\n<p>In collaboration with Nelkinda Software Craft and Equal Experts:</p>\r\n\r\n<p>This meetup is a combination of two talks<br />\r\n<em><strong>1. Why Learn Functional Programming by Anshul Chauhan.</strong></em><br />\r\nDuring this talk, we will learn about the Functional Programming paradigm. Anshul Chauhan will guide us through the basics and key vocabulary of functional programming. Through concrete examples, we will observe how Functional Programming can offer a compelling alternative to Object-Oriented Programming (OOP), potentially enhancing our daily coding tasks.</p>\r\n\r\n<p><em><strong>2. Singleton Paradox: Revisiting Advanced Java Through a Practical Lens by Nikhil Wanpal.</strong></em><br />\r\nSingleton design pattern ensures that only one object of a class exists at runtime. Is it really possible in Java though? During the course of this discussion, we attempt to implement a Singleton in Java and revisit aspects of Java like classes, static state, synchronisation, serialisation and class loading.</p>\r\n\r\n<p><strong>Agenda</strong></p>\r\n\r\n<ul>\r\n	<li>10:00 am - 10:15 am &ndash; Introduction</li>\r\n	<li>10:15 am - 11:00 am &ndash; Talk1: Why Learn Fucntional Programming.</li>\r\n	<li>11:00 am - 11:15 am &ndash; Q &amp; A session + Break 1</li>\r\n	<li>11:15 am - 12:25 pm &ndash; Talk 2: Singleton Paradox: Revisiting Advanced Java Through a Practical Lens.</li>\r\n	<li>12:25 pm - 01:30 pm &ndash; Talk 2 + Q&amp;A</li>\r\n	<li>01:30 pm - 02:00 pm &ndash; Networking</li>\r\n</ul>\r\n\r\n<p>(collaborating meetup groups: Nelkinda Software Craft Pune Meetup, Expert Talks)<br />\r\n<br />\r\n<img alt=\"\" src=\"https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2019/07/EventHandling-In-Java.jpg\" style=\"height:175px; width:300px\" /></p>\r\n', '2025-01-28 09:32:00', '2025-01-28 04:03:03', 'Warje'),
-(4, 3, 'PyData Meetup 2025', '<h2><strong>Details</strong></h2>\r\n\r\n<p>Hello Pythonistas :)</p>\r\n\r\n<p>Happy New Year!</p>\r\n\r\n<p>This time we are having a free-flowing discussion about Python, Python libraries, projects, coding challenges, or anything else of your interest.</p>\r\n\r\n<p>The meetup welcomes Python novices as well as experts. If you need help with an existing project, bring it. If you want to interact with other Pythonistas, do join and say hello.</p>\r\n\r\n<p><strong>How to join?</strong></p>\r\n\r\n<p>Join this video conference link<br />\r\n[<a href=\"https://meet.jit.si/PythonPuneJan25\" target=\"_blank\">https://meet.jit.si/PythonPuneJan25</a>](https://meet.jit.si/PythonPuneJan25)</p>\r\n\r\n<p>Note: Every attendee should follow the PythonPune Code of Conduct during meetup [<a href=\"https://pythonpune.in/code-of-conduct\" target=\"_blank\">https://pythonpune.in/code-of-conduct</a>](https://pythonpune.in/code-of-conduct)</p>\r\n\r\n<p>----</p>\r\n\r\n<p>You are always welcome to talk about anything you are working on, be it a small Python program you wrote, or a new library you tried. Please create a GitHub issue.<br />\r\n[<a href=\"https://github.com/pythonpune/meetup-talks/issues/new/choose\" target=\"_blank\">https://github.com/pythonpune/meetup-talks/issues/new/choose</a>](https://github.com/pythonpune/meetup-talks/issues/new/choose)</p>\r\n', '2025-01-29 13:30:00', '2025-01-27 18:53:59', 'MITWPU, Pune');
+INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`, `location`, `state_id`, `city_id`, `pincode_id`) VALUES
+(5, 4, 'Java meetup', '<h2>Details</h2>\r\n\r\n<p>In collaboration with Nelkinda Software Craft and Equal Experts:</p>\r\n\r\n<p>This meetup is a combination of two talks<br />\r\n<em><strong>1. Why Learn Functional Programming by Anshul Chauhan.</strong></em><br />\r\nDuring this talk, we will learn about the Functional Programming paradigm. Anshul Chauhan will guide us through the basics and key vocabulary of functional programming. Through concrete examples, we will observe how Functional Programming can offer a compelling alternative to Object-Oriented Programming (OOP), potentially enhancing our daily coding tasks.</p>\r\n\r\n<p><em><strong>2. Singleton Paradox: Revisiting Advanced Java Through a Practical Lens by Nikhil Wanpal.</strong></em><br />\r\nSingleton design pattern ensures that only one object of a class exists at runtime. Is it really possible in Java though? During the course of this discussion, we attempt to implement a Singleton in Java and revisit aspects of Java like classes, static state, synchronisation, serialisation and class loading.</p>\r\n\r\n<p><strong>Agenda</strong></p>\r\n\r\n<ul>\r\n	<li>10:00 am - 10:15 am &ndash; Introduction</li>\r\n	<li>10:15 am - 11:00 am &ndash; Talk1: Why Learn Fucntional Programming.</li>\r\n	<li>11:00 am - 11:15 am &ndash; Q &amp; A session + Break 1</li>\r\n	<li>11:15 am - 12:25 pm &ndash; Talk 2: Singleton Paradox: Revisiting Advanced Java Through a Practical Lens.</li>\r\n	<li>12:25 pm - 01:30 pm &ndash; Talk 2 + Q&amp;A</li>\r\n	<li>01:30 pm - 02:00 pm &ndash; Networking</li>\r\n</ul>\r\n\r\n<p>(collaborating meetup groups: Nelkinda Software Craft Pune Meetup, Expert Talks)<br />\r\n<br />\r\n<img alt=\"\" src=\"https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2019/07/EventHandling-In-Java.jpg\" style=\"height:175px; width:300px\" /></p>\r\n', '2025-01-28 09:32:00', '2025-01-28 04:03:03', 'Warje', 0, 0, 0),
+(4, 3, 'PyData Meetup 2025', '<h2><strong>Details</strong></h2>\r\n\r\n<p>Hello Pythonistas :)</p>\r\n\r\n<p>Happy New Year!</p>\r\n\r\n<p>This time we are having a free-flowing discussion about Python, Python libraries, projects, coding challenges, or anything else of your interest.</p>\r\n\r\n<p>The meetup welcomes Python novices as well as experts. If you need help with an existing project, bring it. If you want to interact with other Pythonistas, do join and say hello.</p>\r\n\r\n<p><strong>How to join?</strong></p>\r\n\r\n<p>Join this video conference link<br />\r\n[<a href=\"https://meet.jit.si/PythonPuneJan25\" target=\"_blank\">https://meet.jit.si/PythonPuneJan25</a>](https://meet.jit.si/PythonPuneJan25)</p>\r\n\r\n<p>Note: Every attendee should follow the PythonPune Code of Conduct during meetup [<a href=\"https://pythonpune.in/code-of-conduct\" target=\"_blank\">https://pythonpune.in/code-of-conduct</a>](https://pythonpune.in/code-of-conduct)</p>\r\n\r\n<p>----</p>\r\n\r\n<p>You are always welcome to talk about anything you are working on, be it a small Python program you wrote, or a new library you tried. Please create a GitHub issue.<br />\r\n[<a href=\"https://github.com/pythonpune/meetup-talks/issues/new/choose\" target=\"_blank\">https://github.com/pythonpune/meetup-talks/issues/new/choose</a>](https://github.com/pythonpune/meetup-talks/issues/new/choose)</p>\r\n', '2025-01-29 13:30:00', '2025-01-27 18:53:59', 'MITWPU, Pune', 0, 0, 0),
+(6, 7, 'MulticloudWorld 2025 - Pune', '<h2>Details</h2>\r\n\r\n<p>🌐&nbsp;<strong>MulticloudWorld 2025: Unlock the Future of Cloud Innovation!</strong>&nbsp;🌐<br />\r\nGet ready for the ultimate cloud event of the year! MulticloudWorld 2025 is coming to a city near you, bringing together world-class speakers from Oracle, Google, AWS, industry-leading customers, and many more.</p>\r\n\r\n<p><strong>Coming to a city near you:</strong><br />\r\n2-Feb-2025, Sunday -&nbsp;<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">Pune</a></p>\r\n\r\n<p>🔥&nbsp;<strong>What to Expect:</strong><br />\r\n👉 Inspiring Keynotes: Visionary insights from top-notch speakers.<br />\r\n👉 Deep-Dive Sessions: Hands-on learning and in-depth technical talks on cutting-edge Oracle Multicloud Solutions.<br />\r\n👉 Networking Opportunities: Connect with industry leaders, peers, and experts.</p>\r\n\r\n<p>💡 Shape the Future with Oracle Multicloud Solutions! Whether you&#39;re a developer, architect, or IT leader, this is your chance to stay ahead in the multicloud revolution.</p>\r\n\r\n<p>🎟️ Don&#39;t Wait&mdash;register now at [<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">https://www.aioug.org/mc/2025/pnq</a>](https://www.aioug.org/mc/2025/pnq) for the Early Bird Offer! Spots are limited, so secure your place today and be part of the next big thing in cloud innovation.</p>\r\n', '2025-01-31 13:00:00', '2025-01-28 05:27:58', 'Mumbai, Maharashtra', 0, 0, 0),
+(9, 7, 'Dummy event', '<p>event to check insertion</p>\r\n', '2025-01-28 12:08:00', '2025-01-28 06:39:12', 'Warje', 1, 2, 4);
 
 -- --------------------------------------------------------
 
@@ -426,22 +400,24 @@ CREATE TABLE IF NOT EXISTS `users` (
   `state_id` int DEFAULT NULL,
   `city_id` int DEFAULT NULL,
   `pincode_id` int DEFAULT NULL,
+  `profile_picture` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   KEY `state_id` (`state_id`),
   KEY `city_id` (`city_id`),
   KEY `pincode_id` (`pincode_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `age`, `state_id`, `city_id`, `pincode_id`) VALUES
-(11, 'Atharva Joshi', 'atharva@example.com', '$2y$10$Ag59YYHpH.E9I.gbDS.Z9.ehuyzjvmD1F6Ao9zafmMTUG70V5TRIK', 23, 1, 2, 4),
-(12, 'Aniket', 'aniket@example.com', '$2y$10$1QGoqcxR0SZMBvkq9/J3pO5o1/8tHkxAPzV.WewxDk4LoAf2Z2UHu', 18, 1, 1, 2),
-(13, 'Janhavi Dehadray', 'janhavi@example.com', '$2y$10$fuBsZFI3pjGeIS2Mis.z/OnTDyP9F7kiFY.dbl3IE3EbAP0XEDA0e', 23, 2, 4, 10),
-(15, 'Anupama Joshi', 'anupama@example.com', '$2y$10$QIt1p0YP4HUfhZf1qB6yvOcFgXpzJU5n8W7OIo/3mTiPQ1Ojl0cK2', 51, 1, 2, 4);
+INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `age`, `state_id`, `city_id`, `pincode_id`, `profile_picture`) VALUES
+(11, 'Atharva Joshi', 'atharva@example.com', '$2y$10$Ag59YYHpH.E9I.gbDS.Z9.ehuyzjvmD1F6Ao9zafmMTUG70V5TRIK', 23, 1, 2, 4, 'uploads/profile_pictures/11_PP.jpg'),
+(12, 'Aniket', 'aniket@example.com', '$2y$10$1QGoqcxR0SZMBvkq9/J3pO5o1/8tHkxAPzV.WewxDk4LoAf2Z2UHu', 18, 1, 1, 2, NULL),
+(13, 'Janhavi Dehadray', 'janhavi@example.com', '$2y$10$fuBsZFI3pjGeIS2Mis.z/OnTDyP9F7kiFY.dbl3IE3EbAP0XEDA0e', 23, 2, 4, 10, NULL),
+(15, 'Anupama Joshi', 'anupama@example.com', '$2y$10$QIt1p0YP4HUfhZf1qB6yvOcFgXpzJU5n8W7OIo/3mTiPQ1Ojl0cK2', 51, 1, 2, 4, NULL),
+(16, 'Janhavi', 'janhavi31@example.com', '$2y$10$kx5/MFFpNHC/fWWXjYddcug9gghj7junc/3j2c5zbkbM5KNzBNbR.', 23, 1, 2, 6, 'uploads/profile_pictures/16_jd PHOTO.jpg');
 
 -- --------------------------------------------------------
 
@@ -467,7 +443,8 @@ INSERT INTO `user_interests` (`user_id`, `interest_ids`) VALUES
 (12, '1'),
 (13, '8,11,12'),
 (14, '2,7,9,10,12'),
-(15, '7,9,12,16');
+(15, '7,9,12,16'),
+(16, '1');
 
 -- --------------------------------------------------------
 
@@ -493,7 +470,8 @@ INSERT INTO `user_skills` (`user_id`, `skill_ids`) VALUES
 (12, '1'),
 (13, '4,10,14'),
 (14, '1,2,3,4'),
-(15, '2,3,4');
+(15, '2,3,4'),
+(16, '4');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

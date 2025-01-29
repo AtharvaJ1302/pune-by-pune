@@ -66,7 +66,7 @@ if (isset($_POST['delete_id'])) {
     $stmt->bind_param("i", $delete_id);
     $stmt->execute();
     $stmt->close();
-    header("Location: " . $_SERVER['PHP_SELF']); // Redirect to refresh the page
+    header("Location: " . $_SERVER['PHP_SELF']); 
     exit;
 }
 
@@ -78,7 +78,7 @@ if (isset($_POST['update_id']) && isset($_POST['update_name'])) {
     $stmt->bind_param("si", $update_name, $update_id);
     $stmt->execute();
     $stmt->close();
-    header("Location: " . $_SERVER['PHP_SELF']); // Redirect to refresh the page
+    header("Location: " . $_SERVER['PHP_SELF']); 
     exit;
 }
 
@@ -93,7 +93,7 @@ if (isset($_POST['delete_skill_id'])) {
     $stmt->bind_param("i", $delete_skill_id);
     $stmt->execute();
     $stmt->close();
-    header("Location: " . $_SERVER['PHP_SELF']); // Redirect to refresh the page
+    header("Location: " . $_SERVER['PHP_SELF']); 
     exit;
 }
 
@@ -105,7 +105,7 @@ if (isset($_POST['update_skill_id']) && isset($_POST['update_skill_name'])) {
     $stmt->bind_param("si", $update_skill_name, $update_skill_id);
     $stmt->execute();
     $stmt->close();
-    header("Location: " . $_SERVER['PHP_SELF']); // Redirect to refresh the page
+    header("Location: " . $_SERVER['PHP_SELF']); 
     exit;
 }
 
@@ -128,7 +128,6 @@ $showCommunityResult =  $conn->query($showCommunity);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <style>
-    /* Sidebar styles */
     .sidebar {
         width: 250px;
         height: 100vh;
@@ -154,7 +153,6 @@ $showCommunityResult =  $conn->query($showCommunity);
         color: #adb5bd;
     }
 
-    /* Main content */
     .main-content {
         margin-left: 250px;
         padding: 20px;
@@ -262,10 +260,8 @@ $showCommunityResult =  $conn->query($showCommunity);
                         <select name="categoryFilter" id="categoryFilter" class="form-select">
                             <option value="">All Categories</option>
                             <?php
-                            // Fetch categories dynamically
                             $categories = $conn->query("SELECT DISTINCT interest_name FROM Interest");
                             while ($category = $categories->fetch_assoc()) {
-                                // Pre-select the filter option if it matches the GET parameter
                                 $selected = isset($_GET['categoryFilter']) && $_GET['categoryFilter'] === $category['interest_name'] ? 'selected' : '';
                                 echo "<option value='" . $category['interest_name'] . "' $selected>" . $category['interest_name'] . "</option>";
                             }
@@ -277,10 +273,8 @@ $showCommunityResult =  $conn->query($showCommunity);
                         <select name="skillFilter" id="skillFilter" class="form-select">
                             <option value="">All Skills</option>
                             <?php
-                            // Fetch skills dynamically
                             $skills = $conn->query("SELECT DISTINCT skill_name FROM Skills");
                             while ($skill = $skills->fetch_assoc()) {
-                                // Pre-select the filter option if it matches the GET parameter
                                 $selected = isset($_GET['skillFilter']) && $_GET['skillFilter'] === $skill['skill_name'] ? 'selected' : '';
                                 echo "<option value='" . $skill['skill_name'] . "' $selected>" . $skill['skill_name'] . "</option>";
                             }
@@ -307,11 +301,9 @@ $showCommunityResult =  $conn->query($showCommunity);
                 </thead>
                 <tbody>
                     <?php
-                    // Fetch filter values from the GET request
                     $categoryFilter = isset($_GET['categoryFilter']) && !empty($_GET['categoryFilter']) ? $_GET['categoryFilter'] : '';
                     $skillFilter = isset($_GET['skillFilter']) && !empty($_GET['skillFilter']) ? $_GET['skillFilter'] : '';
 
-                    // Base query to fetch all users
                     $sql = "SELECT 
                             users.name, 
                             users.email, 
@@ -330,19 +322,16 @@ $showCommunityResult =  $conn->query($showCommunity);
                         LEFT JOIN Interest ON FIND_IN_SET(Interest.interest_id, user_interests.interest_ids) > 0
                         LEFT JOIN user_skills ON users.user_id = user_skills.user_id
                         LEFT JOIN Skills ON FIND_IN_SET(Skills.skill_id, user_skills.skill_ids) > 0
-                        WHERE 1=1"; // Default condition
+                        WHERE 1=1"; 
 
-                    // If category filter is applied
                     if (!empty($categoryFilter)) {
                         $sql .= " AND FIND_IN_SET((SELECT interest_id FROM Interest WHERE interest_name = '$categoryFilter'), user_interests.interest_ids)";
                     }
 
-                    // If skill filter is applied
                     if (!empty($skillFilter)) {
                         $sql .= " AND FIND_IN_SET((SELECT skill_id FROM Skills WHERE skill_name = '$skillFilter'), user_skills.skill_ids)";
                     }
 
-                    // Group by user ID
                     $sql .= " GROUP BY users.user_id";
 
                     $result = $conn->query($sql);
@@ -463,12 +452,10 @@ $showCommunityResult =  $conn->query($showCommunity);
                             <div class="col-md-6 mb-4">
                                 <div class="card shadow">
                                     <div class="row g-0">
-                                        <!-- Left Column: Community Image -->
                                         <div class="col-md-4 d-flex justify-content-center align-items-center">
                                             <img src="../<?php echo htmlspecialchars($row['image_path']); ?>"
                                                 class="img-fluid" alt="Community Image" style="border-radius: 15px; width: 100%; max-width: 100%; height: auto; margin-left: 15px">
                                         </div>
-                                        <!-- Right Column: Community Details -->
                                         <div class="col-md-8">
                                             <div class="card-body">
                                                 <h5 class="card-title"><?php echo htmlspecialchars($row['community_name']); ?></h5>

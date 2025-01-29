@@ -11,18 +11,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $city_id = $_POST['city'];
     $pincode_id = $_POST['pincode'];
 
+    $profile_picture = '';
+    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+        $uploads_dir = 'uploads/profile_pictures';
+        if (!is_dir($uploads_dir)) {
+            mkdir($uploads_dir, 0777, true);
+        }
+        $file_name = time() . '_' . basename($_FILES['profile_picture']['name']); 
+        $target_file = "$uploads_dir/$file_name";
+
+        if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
+            $profile_picture = $file_name;
+        } else {
+            echo "<div class='alert alert-danger'>Error uploading profile picture.</div>";
+        }
+    }
+
     $checkEmailQuery = "SELECT * FROM users WHERE email = '$email'";
     $emailResult = $conn->query($checkEmailQuery);
 
     if ($emailResult->num_rows > 0) {
         $result = "<div class='alert alert-danger'>Error: Email already exists. Please use a different email.</div>";
     } else {
-        $sql = "INSERT INTO users (name, email, password, age, state_id, city_id, pincode_id) 
-                VALUES ('$name', '$email', '$password', $age, $state_id, $city_id, $pincode_id)";
-        
+        $sql = "INSERT INTO users (name, email, password, age, state_id, city_id, pincode_id, profile_picture) 
+                VALUES ('$name', '$email', '$password', $age, $state_id, $city_id, $pincode_id, '$profile_picture')";
+
         if ($conn->query($sql) === TRUE) {
-            $user_id = $conn->insert_id; // Get the ID of the newly created user
-            $_SESSION['user_id'] = $user_id; // Store user ID in session
+            $user_id = $conn->insert_id; 
+            $_SESSION['user_id'] = $user_id; 
             header('Location: categories.php');
             exit();
         } else {
@@ -39,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Registration</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script>
         async function fetchCities(stateId) {
@@ -70,12 +85,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-<body>
     <div class="container mt-5 mb-5 d-flex justify-content-center align-items-center min-vh-100">
         <div class="card p-4 shadow-sm" style="max-width: 400px; width: 100%;">
             <h1 class="text-center mb-4">User Registration</h1>
             <?php if (isset($result)) echo $result; ?>
-            <form action="" method="POST">
+            <form action="" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="profile_picture" class="form-label">Profile Picture:</label>
+                    <input type="file" id="profile_picture" name="profile_picture" class="form-control">
+                </div>
+
                 <div class="mb-3">
                     <label for="name" class="form-label">Name:</label>
                     <input type="text" id="name" name="name" class="form-control" required>
@@ -125,13 +144,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <button type="submit" class="btn btn-primary w-100">Register</button>
             </form>
-            <p class="text-center  mt-3">
-            Don't have an account? <a href="user_login.php">Login</a>
-        </p>
+            <p class="text-center mt-3">
+                Don't have an account? <a href="user_login.php">Login</a>
+            </p>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

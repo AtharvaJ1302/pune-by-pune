@@ -11,7 +11,6 @@ if (!isset($_GET['community_id'])) {
 
 $community_id = $_GET['community_id'];
 
-// Fetch community details
 $sql = "SELECT communities.*, COUNT(community_members.user_id) AS member_count
         FROM communities
         LEFT JOIN community_members ON communities.community_id = community_members.community_id
@@ -23,13 +22,11 @@ if ($result->num_rows > 0) {
     $community = $result->fetch_assoc();
     $is_creator = $community['user_id'] == $user_id;
 
-    //fetch admin details
     $admin_id = $community['user_id'];
     $admin_sql = "SELECT name FROM users WHERE user_id = '$admin_id'";
     $admin_result = $conn->query($admin_sql);
     $admin_name = ($admin_result->num_rows > 0) ? $admin_result->fetch_assoc()['name'] : 'Unknown Admin';
 
-    // Check if the user is already a member of the community
     $check_membership = "SELECT * FROM community_members WHERE user_id = '$user_id' AND community_id = '$community_id'";
     $membership_result = $conn->query($check_membership);
     $is_member = $membership_result->num_rows > 0;
@@ -64,7 +61,7 @@ GROUP BY u.user_id, u.name, u.age, s.state_name, c.city_name, p.pincode
 $members_result = $conn->query($members_sql);
 
 
-$current_time = date('Y-m-d H:i:s'); // Get the current time
+$current_time = date('Y-m-d H:i:s'); 
 $eventQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
                              (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
                       FROM events e
@@ -116,7 +113,6 @@ $eventResult = $stmt->get_result();
     <?php include('navbar.php') ?>
     <div class="container mt-4">
         <div class="row g-0">
-            <!-- Left Section -->
             <div class="col-md-4 bg-warning text-center d-flex align-items-center justify-content-center position-relative p-4" style="background: url('<?php echo $community['image_path']; ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; height:auto;">
                 <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
                 <div class="bg-opacity-75 text-center rounded position-relative">
@@ -124,7 +120,6 @@ $eventResult = $stmt->get_result();
                 </div>
             </div>
 
-            <!-- Right Section -->
             <div class="col-md-8 bg-white">
                 <div class="p-4">
                     <h3 class="fw-bold"><?php echo $community['community_name']; ?></h3>
@@ -152,7 +147,6 @@ $eventResult = $stmt->get_result();
             </div>
         </div>
 
-        <!-- Tabs Section -->
         <div class="mt-4">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -178,12 +172,11 @@ $eventResult = $stmt->get_result();
                 <!-- Events Section -->
                 <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
                     <?php
-                    // Fetch the number of upcoming events for the specific community
                     $eventCountQuery = "SELECT COUNT(*) AS event_count FROM events WHERE community_id = ?";
                     $stmt = $conn->prepare($eventCountQuery);
 
                     if ($stmt) {
-                        $stmt->bind_param("i", $community_id); // Assuming $community_id is set
+                        $stmt->bind_param("i", $community_id); 
                         $stmt->execute();
                         $result = $stmt->get_result();
                         $row = $result->fetch_assoc();
@@ -199,7 +192,6 @@ $eventResult = $stmt->get_result();
                     <div class="container mt-5 mb-5">
                         <?php if ($eventResult->num_rows > 0) {
                             while ($row = $eventResult->fetch_assoc()) {
-                                // Format the event time
                                 $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
                                 $short_description = substr($row['event_description'], 0, 200) . (strlen($row['event_description']) > 200 ? "..." : "");
                         ?>
@@ -211,7 +203,7 @@ $eventResult = $stmt->get_result();
                                                 <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
                                             </div>
                                             <div class="d-flex align-items-center">
-                                                <a href="event_info.php" class="btn btn-outline-primary">View Event</a>
+                                                <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="btn btn-outline-primary">View Event</a>
                                             </div>
                                         </div>
                                         <p class="card-text mb-3">
@@ -251,8 +243,8 @@ $eventResult = $stmt->get_result();
                                         <strong>Pincode:</strong> <?php echo htmlspecialchars($member['pincode']); ?><br>
                                         <strong>Skills:</strong>
                                         <?php
-                                        $skills = explode(',', $member['skills']); // Split the comma-separated skills into an array
-                                        echo implode(', ', array_map('htmlspecialchars', $skills)); // Safely display skills as a comma-separated string
+                                        $skills = explode(',', $member['skills']); 
+                                        echo implode(', ', array_map('htmlspecialchars', $skills)); 
                                         ?>
                                     </p>
                                 </li>

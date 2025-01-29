@@ -21,12 +21,42 @@ $eventsQuery = "
     LIMIT 6 -- Limit the results to 6
 ";
 
-// Execute the query
 $eventResult = $conn->query($eventsQuery);
 
 if (!$eventResult) {
     echo "Error fetching events: " . $conn->error;
     exit;
+}
+
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    
+    $query = "SELECT pincode_id FROM users WHERE user_id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $stmt->store_result();
+    $stmt->bind_result($user_pincode_id);
+    $stmt->fetch();
+    $stmt->close();
+    
+    if (isset($user_pincode_id)) {
+        $eventQuery = "SELECT * FROM events WHERE pincode_id = ?";
+        $stmt = $conn->prepare($eventQuery);
+        $stmt->bind_param("i", $user_pincode_id);
+        $stmt->execute();
+        $eventResult = $stmt->get_result();
+    } else {
+        $eventQuery = "SELECT * FROM events";
+        $stmt = $conn->prepare($eventQuery);
+        $stmt->execute();
+        $eventResult = $stmt->get_result();
+    }
+} else {
+    $eventQuery = "SELECT * FROM events";
+    $stmt = $conn->prepare($eventQuery);
+    $stmt->execute();
+    $eventResult = $stmt->get_result();
 }
 ?>
 
@@ -36,7 +66,7 @@ if (!$eventResult) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CommunityHub - Connect & Engage</title>
+    <title>Pune By Pune</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
@@ -137,7 +167,6 @@ if (!$eventResult) {
                         <h5>Created Communities</h5>
                         <hr>
                         <?php
-                        // Fetch created communities
                         $userId = $_SESSION['user_id'];
                         $createdQuery = "SELECT community_id, community_name FROM communities WHERE user_id = $userId AND status = 1";
                         $createdResult = $conn->query($createdQuery);
@@ -157,7 +186,6 @@ if (!$eventResult) {
                         <h5>Joined Communities</h5>
                         <hr>
                         <?php
-                        // Fetch joined communities
                         $joinedQuery = "SELECT communities.community_id, communities.community_name FROM community_members 
                             JOIN communities ON community_members.community_id = communities.community_id 
                             WHERE community_members.user_id = $userId";
@@ -189,11 +217,11 @@ if (!$eventResult) {
                     <div class="card-body">
                         <div class="row">
                             <?php
-                            $limit = 6; // Set the maximum number of cards to display
+                            $limit = 6;
                             $counter = 0;
                             if ($result->num_rows > 0):
                                 while ($row = $result->fetch_assoc()) :
-                                    if ($counter >= $limit) break; // Stop after 6 communities
+                                    if ($counter >= $limit) break; 
                                     $counter++;
                             ?>
                                     <div class="col-md-4 mb-4 d-flex">
@@ -300,7 +328,7 @@ if (!$eventResult) {
         });
 
         function getRandomColor() {
-            const letters = "89ABCDEF"; // Restrict to higher values for softer colors
+            const letters = "89ABCDEF"; 
             let color = "#";
             for (let i = 0; i < 6; i++) {
                 color += letters[Math.floor(Math.random() * letters.length)];

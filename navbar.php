@@ -23,7 +23,7 @@
                     <li class="nav-item"><a class="nav-link fw-bold text-dark" href="home.php">Home</a></li>
                     <li class="nav-item"><a class="nav-link fw-bold text-dark" href="all_communities.php">Communities</a></li>
                     <li class="nav-item"><a class="nav-link fw-bold text-dark" href="all_events.php">Events</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="#profile">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link fw-bold text-dark" href="profile.php">Profile</a></li>
                     <li class="nav-item"><a class="nav-link fw-bold text-dark" href="about_us.php">About Us</a></li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li class="nav-item"><a class="nav-link btn btn-danger ms-2 fw-bold text-dark" href="user_logout.php">Logout</a></li>

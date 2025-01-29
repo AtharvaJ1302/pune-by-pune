@@ -9,7 +9,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $organized_by = $_POST['organized_by'];
     $banner_image = null;
 
-    // Handle file upload
     if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
         $target_dir = "uploads/";
         $banner_image = $target_dir . basename($_FILES['banner_image']['name']);
@@ -17,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
 
-    // Update query
     $update_sql = "
         UPDATE communities
         SET community_name = ?, community_description = ?, organized_by = ?, image_path = IFNULL(?, image_path)
