@@ -1,5 +1,5 @@
 <?php
-session_start();
+include('navbar.php');
 include('connection.php');
 
 $sql = "SELECT communities.community_id, communities.community_name, communities.community_description, communities.image_path, 
@@ -21,6 +21,7 @@ $result = $conn->query($sql);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./CSS/home.css">
 </head>
 <style>
     .card-text {
@@ -31,7 +32,6 @@ $result = $conn->query($sql);
         }
 </style>
 <body>
-    <?php include('navbar.php') ?>
     <div class="container my-4">
         <div class="card">
             <div class="card-header text-center">

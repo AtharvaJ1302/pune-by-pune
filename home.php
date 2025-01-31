@@ -1,5 +1,5 @@
 <?php
-session_start();
+include('navbar.php');
 include('connection.php');
 
 $sql = "SELECT communities.community_id, communities.community_name, communities.community_description, communities.image_path, 
@@ -155,8 +155,6 @@ if (isset($_SESSION['user_id'])) {
 </head>
 
 <body>
-    <?php include('navbar.php') ?>
-
     <div class="container mt-4">
         <div class="row">
             <aside class="col-md-3 mb-5">

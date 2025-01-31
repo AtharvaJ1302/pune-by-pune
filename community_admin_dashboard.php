@@ -72,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
 }
 
 if (isset($_GET['community_id'])) {
-    $community_id = intval($_GET['community_id']); 
+    $community_id = intval($_GET['community_id']);
 
     $community_sql = "SELECT community_name FROM communities WHERE community_id = ?";
     $stmt = $conn->prepare($community_sql);
@@ -93,6 +93,72 @@ if (isset($_GET['community_id'])) {
     $event_result = $event_stmt->get_result();
 } else {
     die("Invalid community ID.");
+}
+
+$uploadPostSql = "SELECT event_id, event_name FROM events WHERE community_id = ?";
+$stmt = $conn->prepare($uploadPostSql);
+$stmt->bind_param("i", $community_id);
+$stmt->execute();
+$uploadPostResult = $stmt->get_result();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($_POST['event_id'])) {
+    // Get community_id from the URL
+    if (isset($_GET['community_id'])) {
+        $community_id = intval($_GET['community_id']);
+    } else {
+        die("Community ID not provided!");
+    }
+
+    $event_id = intval($_POST['event_id']); // Get event ID from the form
+    $uploadDir = "uploads/community_event/photos/";
+    $uploadedFiles = [];
+
+    // Ensure the upload directory exists
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    foreach ($_FILES['photos']['tmp_name'] as $key => $tmp_name) {
+        $fileName = basename($_FILES['photos']['name'][$key]);
+        $filePath = $uploadDir . time() . "_" . $fileName; // Unique filename
+
+        if (move_uploaded_file($tmp_name, $filePath)) {
+            $uploadedFiles[] = $filePath; // Store the file path
+        }
+    }
+
+    if (!empty($uploadedFiles)) {
+        $photoString = implode(',', $uploadedFiles); // Convert array to comma-separated string
+
+        // Check if a record already exists for the same community and event
+        $sql = "SELECT photos FROM event_photos WHERE community_id = ? AND event_id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ii", $community_id, $event_id);
+        $stmt->execute();
+        $stmt->store_result();
+
+        if ($stmt->num_rows > 0) {
+            // Fetch existing photos and append new ones
+            $stmt->bind_result($existingPhotos);
+            $stmt->fetch();
+            $updatedPhotos = empty($existingPhotos) ? $photoString : $existingPhotos . ',' . $photoString;
+
+            // Update existing record
+            $updateSql = "UPDATE event_photos SET photos = ? WHERE community_id = ? AND event_id = ?";
+            $updateStmt = $conn->prepare($updateSql);
+            $updateStmt->bind_param("sii", $updatedPhotos, $community_id, $event_id);
+            $updateStmt->execute();
+        } else {
+            // Insert new record
+            $insertSql = "INSERT INTO event_photos (community_id, event_id, photos) VALUES (?, ?, ?)";
+            $insertStmt = $conn->prepare($insertSql);
+            $insertStmt->bind_param("iis", $community_id, $event_id, $photoString);
+            $insertStmt->execute();
+        }
+    }
+
+    header("Location: community_admin_dashboard.php?community_id=" . $community_id); // Redirect back with community_id
+    exit();
 }
 ?>
 
@@ -385,6 +451,30 @@ if (isset($_GET['community_id'])) {
                 </div>
             </div>
         </div>
+
+        <div id="create_post" class="section mt-4">
+            <h4>Create Event Photos</h4>
+            <form action="" method="POST" enctype="multipart/form-data">
+
+                <div class="mb-3">
+                    <label for="event_id" class="form-label">Select Event:</label>
+                    <select name="event_id" id="event_id" class="form-select" required>
+                        <option value="">-- Select an Event --</option>
+                        <?php while ($row = $uploadPostResult->fetch_assoc()) { ?>
+                            <option value="<?php echo $row['event_id']; ?>"><?php echo htmlspecialchars($row['event_name']); ?></option>
+                        <?php } ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="photos" class="form-label">Select Event Photos:</label>
+                    <input type="file" name="photos[]" id="photos" class="form-control" multiple accept="image/*" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -403,8 +493,8 @@ if (isset($_GET['community_id'])) {
         }
 
         document.getElementById('state_id').addEventListener('change', function() {
-            const stateId = this.value; 
-            const cityDropdown = document.getElementById('city_id'); 
+            const stateId = this.value;
+            const cityDropdown = document.getElementById('city_id');
 
             cityDropdown.innerHTML = '<option value="">Select City</option>';
 
@@ -424,8 +514,8 @@ if (isset($_GET['community_id'])) {
         });
 
         document.getElementById('city_id').addEventListener('change', function() {
-            const cityId = this.value; 
-            const pincodeDropdown = document.getElementById('pincode_id'); 
+            const cityId = this.value;
+            const pincodeDropdown = document.getElementById('pincode_id');
 
             pincodeDropdown.innerHTML = '<option value="">Select Pincode</option>';
 

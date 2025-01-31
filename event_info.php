@@ -1,5 +1,5 @@
 <?php
-session_start();
+include('navbar.php');
 include 'connection.php';
 
 if (isset($_GET['event_id'])) {
@@ -38,6 +38,7 @@ $formatted_event_date = $event_time_ist->format('l, jS F Y');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./CSS/home.css">
     <style>
         .sticky-bottom-nav {
             position: fixed;
@@ -60,8 +61,7 @@ $formatted_event_date = $event_time_ist->format('l, jS F Y');
 </head>
 
 <body>
-    <?php include('navbar.php') ?>
-    <div class="container my-4 bg-body-tertiary" style="padding-bottom: 40px;"> 
+    <div class="container my-4 border shadow-sm ps-4" style="padding-bottom: 50px;background: linear-gradient(to right, #ff7e5f, #feb47b); color: black;"> 
         <div class="row">
             <div class="col-md-8 left-column">
                 <img src="path_to_event_image.jpg" alt="Event Image" class="img-fluid rounded mb-3">

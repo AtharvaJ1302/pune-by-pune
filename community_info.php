@@ -1,5 +1,5 @@
 <?php
-session_start();
+include('navbar.php');
 include 'connection.php';
 
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
@@ -38,7 +38,8 @@ if ($result->num_rows > 0) {
 $members_sql = "
     SELECT 
     u.name, 
-    u.age, 
+    u.age,
+    u.profile_picture, 
     s.state_name, 
     c.city_name, 
     p.pincode, 
@@ -61,7 +62,7 @@ GROUP BY u.user_id, u.name, u.age, s.state_name, c.city_name, p.pincode
 $members_result = $conn->query($members_sql);
 
 
-$current_time = date('Y-m-d H:i:s'); 
+$current_time = date('Y-m-d H:i:s');
 $eventQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
                              (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
                       FROM events e
@@ -72,6 +73,15 @@ $stmt = $conn->prepare($eventQuery);
 $stmt->bind_param("si", $current_time, $community_id);
 $stmt->execute();
 $eventResult = $stmt->get_result();
+
+$eventPhotosSql = "SELECT ep.event_id, ep.photos, e.event_name 
+        FROM event_photos ep
+        JOIN events e ON ep.event_id = e.event_id
+        WHERE ep.community_id = ?";
+$stmt = $conn->prepare($eventPhotosSql);
+$stmt->bind_param("i", $community_id);
+$stmt->execute();
+$eventPhotosResult = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -86,6 +96,16 @@ $eventResult = $stmt->get_result();
     <link rel="stylesheet" href="./CSS/home.css">
 </head>
 <style>
+    .tab-option {
+        cursor: pointer;
+    }
+
+    .tab-option.active {
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+
     .attendees-images img {
         width: 40px;
         height: 40px;
@@ -107,10 +127,53 @@ $eventResult = $stmt->get_result();
         font-size: 1.5rem;
         font-weight: 700;
     }
+
+    .photo-container {
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .photo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .event-section {
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .photo-row {
+        gap: 10px;
+        padding-bottom: 10px;
+    }
+
+    .photo-card {
+        width: 300px;
+    }
+
+    .d-flex {
+        overflow-x: auto;
+        padding-bottom: 10px;
+        gap: 15px;
+    }
+
+    .profile-photo {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
 </style>
 
 <body>
-    <?php include('navbar.php') ?>
     <div class="container mt-4">
         <div class="row g-0">
             <div class="col-md-4 bg-warning text-center d-flex align-items-center justify-content-center position-relative p-4" style="background: url('<?php echo $community['image_path']; ?>'); background-size: cover; background-position: center; background-repeat: no-repeat; height:auto;">
@@ -163,66 +226,115 @@ $eventResult = $stmt->get_result();
                 </li>
             </ul>
             <div class="tab-content mt-3" id="myTabContent">
-                <!-- About Section -->
+
+                <!-- about community -->
                 <div class="tab-pane fade show active" id="about" role="tabpanel" aria-labelledby="about-tab">
                     <h5 class="fw-bold">What we’re about</h5>
                     <p><?php echo $community['community_description']; ?></p>
                 </div>
 
-                <!-- Events Section -->
-                <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
-                    <?php
-                    $eventCountQuery = "SELECT COUNT(*) AS event_count FROM events WHERE community_id = ?";
-                    $stmt = $conn->prepare($eventCountQuery);
+                <!-- events section -->
+                <div class="tab-pane fade mb-5" id="events" role="tabpanel" aria-labelledby="events-tab">
+                    <h5 class="fw-bold">Community Events</h5>
 
-                    if ($stmt) {
-                        $stmt->bind_param("i", $community_id); 
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-                        $row = $result->fetch_assoc();
-                        $eventCount = $row['event_count'];
-                        $stmt->close();
-                    } else {
-                        $eventCount = 0;
-                    }
-                    ?>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <ul class="list-group">
+                                <li class="list-group-item active tab-option" id="upcoming-tab">Upcoming Events</li>
+                                <li class="list-group-item tab-option" id="past-tab">Past Events</li>
+                            </ul>
+                        </div>
 
-                    <h5 class="fw-bold">Upcoming events (<?php echo $eventCount; ?>)</h5>
+                        <div class="col-md-8">
+                            <div id="upcoming-events">
+                                <?php
+                                $current_time = date('Y-m-d H:i:s');
+                                $upcomingQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
+                                    (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                                FROM events e
+                                WHERE e.event_time > ? AND e.community_id = ?
+                                ORDER BY e.event_time ASC";
 
-                    <div class="container mt-5 mb-5">
-                        <?php if ($eventResult->num_rows > 0) {
-                            while ($row = $eventResult->fetch_assoc()) {
-                                $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
-                                $short_description = substr($row['event_description'], 0, 200) . (strlen($row['event_description']) > 200 ? "..." : "");
-                        ?>
-                                <div class="card shadow-lg p-3 mb-4">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
-                                            <div>
-                                                <h6 class="text-uppercase text-muted mb-1"><?php echo $formatted_time; ?></h6>
-                                                <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
-                                            </div>
-                                            <div class="d-flex align-items-center">
-                                                <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="btn btn-outline-primary">View Event</a>
+                                $stmt = $conn->prepare($upcomingQuery);
+                                $stmt->bind_param("si", $current_time, $community_id);
+                                $stmt->execute();
+                                $upcomingResult = $stmt->get_result();
+
+                                if ($upcomingResult->num_rows > 0) {
+                                    while ($row = $upcomingResult->fetch_assoc()) {
+                                        $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                                        $short_description = substr($row['event_description'], 0, 200) . (strlen($row['event_description']) > 200 ? "..." : "");
+                                ?>
+                                        <div class="card shadow-lg p-3 mb-4">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <h6 class="text-uppercase text-muted mb-1"><?php echo $formatted_time; ?></h6>
+                                                        <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="btn btn-outline-primary">View Event</a>
+                                                    </div>
+                                                </div>
+                                                <p class="card-text mb-3"><?php echo $short_description; ?></p>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="ms-3 attendees-count"><?php echo $row['attendees_count']; ?> attendees</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <p class="card-text mb-3">
-                                            <?php echo $short_description; ?>
-                                        </p>
-                                        <div class="d-flex align-items-center">
-                                            <span class="ms-3 attendees-count"><?php echo $row['attendees_count']; ?> attendees</span>
+                                <?php
+                                    }
+                                } else {
+                                    echo "<p class='text-center text-muted'>No upcoming events found.</p>";
+                                }
+                                ?>
+                            </div>
+
+                            <div id="past-events" style="display: none;">
+                                <?php
+                                $pastQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
+                                    (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                                FROM events e
+                                WHERE e.event_time <= ? AND e.community_id = ?
+                                ORDER BY e.event_time DESC";
+
+                                $stmt = $conn->prepare($pastQuery);
+                                $stmt->bind_param("si", $current_time, $community_id);
+                                $stmt->execute();
+                                $pastResult = $stmt->get_result();
+
+                                if ($pastResult->num_rows > 0) {
+                                    while ($row = $pastResult->fetch_assoc()) {
+                                        $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                                        $short_description = substr($row['event_description'], 0, 200) . (strlen($row['event_description']) > 200 ? "..." : "");
+                                ?>
+                                        <div class="card shadow-lg p-3 mb-4">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                                    <div>
+                                                        <h6 class="text-uppercase text-muted mb-1"><?php echo $formatted_time; ?></h6>
+                                                        <h5 class="card-title"><?php echo htmlspecialchars($row['event_name']); ?></h5>
+                                                    </div>
+                                                    <div class="d-flex align-items-center">
+                                                        <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="btn btn-outline-primary">View Event</a>
+                                                    </div>
+                                                </div>
+                                                <p class="card-text mb-3"><?php echo $short_description; ?></p>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="ms-3 attendees-count"><?php echo $row['attendees_count']; ?> attendees</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                        <?php
-                            }
-                        } else {
-                            echo "<p class='text-center text-muted'>No upcoming events found.</p>";
-                        }
-                        ?>
+                                <?php
+                                    }
+                                } else {
+                                    echo "<p class='text-center text-muted'>No past events found.</p>";
+                                }
+                                ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
 
                 <!-- Members Section -->
                 <div class="tab-pane fade mb-5" id="members" role="tabpanel" aria-labelledby="members-tab">
@@ -237,14 +349,15 @@ $eventResult = $stmt->get_result();
                             <?php while ($member = $members_result->fetch_assoc()): ?>
                                 <li class="list-group-item">
                                     <h6 class="fw-bold"><?php echo htmlspecialchars($member['name']); ?></h6>
+                                    <img src="<?php echo $member['profile_picture']; ?>" alt="Profile Picture" class="profile-photo me-3">
                                     <p class="mb-0">
                                         <strong>Age:</strong> <?php echo htmlspecialchars($member['age']); ?><br>
                                         <strong>City:</strong> <?php echo htmlspecialchars($member['city_name']); ?>, <?php echo htmlspecialchars($member['state_name']); ?><br>
                                         <strong>Pincode:</strong> <?php echo htmlspecialchars($member['pincode']); ?><br>
                                         <strong>Skills:</strong>
                                         <?php
-                                        $skills = explode(',', $member['skills']); 
-                                        echo implode(', ', array_map('htmlspecialchars', $skills)); 
+                                        $skills = explode(',', $member['skills']);
+                                        echo implode(', ', array_map('htmlspecialchars', $skills));
                                         ?>
                                     </p>
                                 </li>
@@ -259,20 +372,91 @@ $eventResult = $stmt->get_result();
 
 
                 <!-- Photos Section -->
-                <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                <div class="tab-pane fade mb-5" id="photos" role="tabpanel" aria-labelledby="photos-tab">
                     <h5 class="fw-bold">Photos</h5>
-                    <p>Content for photos will go here.</p>
+
+                    <div class="d-flex flex-column gap-3">
+                        <?php
+                        $events = [];
+                        while ($row = $eventPhotosResult->fetch_assoc()) {
+                            $events[$row['event_name']][] = explode(',', $row['photos']);
+                        }
+
+                        foreach ($events as $eventName => $photoGroups) {
+                        ?>
+                            <div class="event-section">
+                                <h5 class="text-center fw-bold"><?php echo htmlspecialchars($eventName); ?></h5>
+                                <div class="d-flex overflow-auto photo-row" style="scroll-snap-type: x mandatory;">
+                                    <?php
+                                    foreach ($photoGroups as $photos) {
+                                        foreach ($photos as $photo) {
+                                    ?>
+                                            <div class="photo-card" style="flex: 0 0 auto; margin-right: 10px; scroll-snap-align: start;">
+                                                <div class="card mb-3">
+                                                    <div class="photo-container">
+                                                        <img src="<?php echo htmlspecialchars($photo); ?>" class="card-img-top" alt="Event Photo" data-bs-toggle="modal" data-bs-target="#photoModal" data-bs-img-src="<?php echo htmlspecialchars($photo); ?>">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    <?php
+                                        }
+                                    }
+                                    ?>
+                                </div>
+                            </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Modal for displaying the full-size image -->
+                <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-md">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <img id="modal-photo" src="<?php echo htmlspecialchars($photo); ?>" class="img-fluid" alt="Full-size Event Photo">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        const photoModal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modal-photo');
+
+        photoModal.addEventListener('show.bs.modal', function(event) {
+            const imgSrc = event.relatedTarget.getAttribute('data-bs-img-src');
+            modalImage.src = imgSrc;
+        });
         window.onload = function() {
             if (window.history.pushState) {
                 window.history.pushState(null, null, window.location.href);
             }
         };
+
+        document.getElementById("upcoming-tab").addEventListener("click", function() {
+            document.getElementById("upcoming-events").style.display = "block";
+            document.getElementById("past-events").style.display = "none";
+
+            document.getElementById("upcoming-tab").classList.add("active");
+            document.getElementById("past-tab").classList.remove("active");
+        });
+
+        document.getElementById("past-tab").addEventListener("click", function() {
+            document.getElementById("upcoming-events").style.display = "none";
+            document.getElementById("past-events").style.display = "block";
+
+            document.getElementById("past-tab").classList.add("active");
+            document.getElementById("upcoming-tab").classList.remove("active");
+        });
+
 
         window.onpopstate = function() {
             window.location.href = "home.php";

@@ -1,5 +1,5 @@
 <?php
-session_start();
+include('navbar.php');
 include 'connection.php';
 
 $sql = "SELECT event_id, event_name, event_description, event_time FROM events ORDER BY event_time DESC";
@@ -19,10 +19,10 @@ $colors = [
     <title>All Events</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="./CSS/home.css">
 </head>
 
 <body>
-    <?php include('navbar.php'); ?>
     <div class="container my-5">
         <h1 class="mb-4 text-center">All Events</h1>
 
