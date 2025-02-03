@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Jan 31, 2025 at 06:01 AM
+-- Generation Time: Feb 03, 2025 at 05:40 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -126,7 +126,16 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`community_id`),
   KEY `fk_community_id` (`community_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `community_members`
+--
+
+INSERT INTO `community_members` (`id`, `user_id`, `community_id`, `joined_at`, `status`) VALUES
+(18, 13, 3, '2025-02-03 05:32:30', 'pending'),
+(17, 17, 3, '2025-02-03 05:32:24', 'pending'),
+(16, 13, 7, '2025-02-03 03:23:51', 'pending');
 
 -- --------------------------------------------------------
 
@@ -165,19 +174,33 @@ INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_descripti
 -- --------------------------------------------------------
 
 --
--- Table structure for table `event_participants`
+-- Table structure for table `event_attendees`
 --
 
-DROP TABLE IF EXISTS `event_participants`;
-CREATE TABLE IF NOT EXISTS `event_participants` (
+DROP TABLE IF EXISTS `event_attendees`;
+CREATE TABLE IF NOT EXISTS `event_attendees` (
   `id` int NOT NULL AUTO_INCREMENT,
   `event_id` int NOT NULL,
   `user_id` int NOT NULL,
-  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `domain` varchar(255) NOT NULL,
+  `stream` varchar(255) NOT NULL,
+  `profile_photo` varchar(255) DEFAULT NULL,
+  `pincode_id` int DEFAULT NULL,
+  `mobile_number` varchar(15) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `event_id` (`event_id`,`user_id`),
-  KEY `user_id` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `event_id` (`event_id`),
+  KEY `user_id` (`user_id`),
+  KEY `pincode_id` (`pincode_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `event_attendees`
+--
+
+INSERT INTO `event_attendees` (`id`, `event_id`, `user_id`, `domain`, `stream`, `profile_photo`, `pincode_id`, `mobile_number`) VALUES
+(2, 6, 11, 'IT', 'Mobile App Developer', 'uploads/profile_pictures/11_PP.jpg', 4, ''),
+(3, 6, 13, 'Accounts', 'CA', NULL, 10, ''),
+(4, 5, 13, 'Food', 'Chef', 'uploads/profile_pictures/13_jd PHOTO.jpg', 10, '9730854431');
 
 -- --------------------------------------------------------
 
@@ -320,6 +343,37 @@ INSERT INTO `pincodes` (`pincode_id`, `pincode`, `city_id`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `request`
+--
+
+DROP TABLE IF EXISTS `request`;
+CREATE TABLE IF NOT EXISTS `request` (
+  `request_id` int NOT NULL AUTO_INCREMENT,
+  `community_id` int DEFAULT NULL,
+  `user_id` int DEFAULT NULL,
+  `skill_ids` int DEFAULT NULL,
+  `city_id` int DEFAULT NULL,
+  `pincode_id` int DEFAULT NULL,
+  `status` tinyint(1) DEFAULT '0',
+  PRIMARY KEY (`request_id`),
+  KEY `community_id` (`community_id`),
+  KEY `user_id` (`user_id`),
+  KEY `skill_id` (`skill_ids`),
+  KEY `city_id` (`city_id`),
+  KEY `pincode_id` (`pincode_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `request`
+--
+
+INSERT INTO `request` (`request_id`, `community_id`, `user_id`, `skill_ids`, `city_id`, `pincode_id`, `status`) VALUES
+(2, 3, 17, 1, 1, 1, 1),
+(3, 3, 13, 4, 4, 10, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `skills`
 --
 
@@ -430,9 +484,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `age`, `state_id`, `city_id`, `pincode_id`, `profile_picture`, `phone_number`) VALUES
-(11, 'Atharva Joshi', 'atharva@example.com', '$2y$10$Ag59YYHpH.E9I.gbDS.Z9.ehuyzjvmD1F6Ao9zafmMTUG70V5TRIK', 23, 1, 2, 4, 'uploads/profile_pictures/11_PP.jpg', ''),
+(11, 'Atharva Joshi', 'atharva@example.com', '$2y$10$Ag59YYHpH.E9I.gbDS.Z9.ehuyzjvmD1F6Ao9zafmMTUG70V5TRIK', 23, 1, 2, 4, 'uploads/profile_pictures/11_PP.jpg', '7350125844'),
 (12, 'Aniket', 'aniket@example.com', '$2y$10$1QGoqcxR0SZMBvkq9/J3pO5o1/8tHkxAPzV.WewxDk4LoAf2Z2UHu', 18, 1, 1, 2, NULL, ''),
-(13, 'Janhavi Dehadray', 'janhavi@example.com', '$2y$10$fuBsZFI3pjGeIS2Mis.z/OnTDyP9F7kiFY.dbl3IE3EbAP0XEDA0e', 23, 2, 4, 10, NULL, ''),
+(13, 'Janhavi Dehadray', 'janhavi@example.com', '$2y$10$fuBsZFI3pjGeIS2Mis.z/OnTDyP9F7kiFY.dbl3IE3EbAP0XEDA0e', 23, 2, 4, 10, 'uploads/profile_pictures/13_jd PHOTO.jpg', '9730854431'),
 (15, 'Anupama Joshi', 'anupama@example.com', '$2y$10$QIt1p0YP4HUfhZf1qB6yvOcFgXpzJU5n8W7OIo/3mTiPQ1Ojl0cK2', 51, 1, 2, 4, NULL, ''),
 (16, 'Janhavi', 'janhavi31@example.com', '$2y$10$kx5/MFFpNHC/fWWXjYddcug9gghj7junc/3j2c5zbkbM5KNzBNbR.', 23, 1, 2, 6, 'uploads/profile_pictures/16_jd PHOTO.jpg', ''),
 (17, 'sahil joshi', 'sahil@example.com', '$2y$10$SNjvobqYWvx4YU6cyKFNLOAUvB8rfgIfe/HW7gefklXB0XpdFPfkG', 23, 1, 1, 1, '1738145241_pfp.jpg', '+917350125844');
@@ -457,7 +511,7 @@ CREATE TABLE IF NOT EXISTS `user_interests` (
 INSERT INTO `user_interests` (`user_id`, `interest_ids`) VALUES
 (4, '1'),
 (5, '1,2,3,4,5'),
-(11, '1,2,3'),
+(11, '5,9'),
 (12, '1'),
 (13, '8,11,12'),
 (14, '2,7,9,10,12'),

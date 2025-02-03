@@ -40,9 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
     $email = $_POST['email'];
     $age = intval($_POST['age']);
-    $state_id = isset($_POST['state']) ? $_POST['state'] : null; 
-    $city_id = isset($_POST['city']) ? $_POST['city'] : null; 
-    $pincode_id = isset($_POST['pincode']) ? $_POST['pincode'] : null; 
+    $state_id = isset($_POST['state']) ? $_POST['state'] : null;
+    $city_id = isset($_POST['city']) ? $_POST['city'] : null;
+    $pincode_id = isset($_POST['pincode']) ? $_POST['pincode'] : null;
 
     $profile_picture = $_FILES['profile_picture'];
     $upload_dir = 'uploads/profile_pictures/';
@@ -100,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $params[] = $user_id;
 
     if ($stmt = mysqli_prepare($conn, $query)) {
-        $param_types = str_repeat('s', count($params) - 1); 
-        $param_types .= 'i'; 
+        $param_types = str_repeat('s', count($params) - 1);
+        $param_types .= 'i';
         mysqli_stmt_bind_param($stmt, $param_types, ...$params);
 
         if (mysqli_stmt_execute($stmt)) {
@@ -231,39 +231,61 @@ if ($row = $userSkillResult->fetch_assoc()) {
 </head>
 <style>
     .profile-picture {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
+        object-fit: cover;
         border: 2px solid #ddd;
     }
+
+    .card {
+        border-radius: 15px;
+        padding: 20px;
+    }
+
+    .profile-picture {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
 </style>
 
 <body>
-    
+
     <!-- Profile Section -->
-    <div class="container mb-5">
-        <div class="row justify-content-center">
+    <div class="container mt-5 mb-5">
+        <div class="row">
+            <!-- Profile Section -->
             <div class="col-md-6">
                 <div class="card shadow-lg">
                     <div class="card-body text-center">
                         <img src="<?php echo ($profile_photo); ?>" alt="Profile Picture" class="profile-picture mb-3">
                         <h2><?php echo htmlspecialchars($name); ?></h2>
-                        <p class="text-muted"><?php echo htmlspecialchars($email); ?></p>
-                        <p class="text-muted">Age: <?php echo htmlspecialchars($age); ?></p>
-                        <p class="text-muted">State: <?php echo htmlspecialchars($state); ?></p>
-                        <p class="text-muted">City: <?php echo htmlspecialchars($city); ?></p>
-                        <p class="text-muted">Pincode: <?php echo htmlspecialchars($pincode); ?></p>
+                        <p class="text-muted"> <?php echo htmlspecialchars($email); ?></p>
+                        <p class="text-muted"> Age: <?php echo htmlspecialchars($age); ?></p>
+                        <p class="text-muted"> State: <?php echo htmlspecialchars($state); ?></p>
+                        <p class="text-muted"> City: <?php echo htmlspecialchars($city); ?></p>
+                        <p class="text-muted"> Pincode: <?php echo htmlspecialchars($pincode); ?></p>
                         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile</button>
-                        <hr>
+                    </div>
+                </div>
+            </div>
+            <!-- Skills and Interests Sections -->
+            <div class="col-md-6">
+                <div class="card shadow-lg mb-3">
+                    <div class="card-body">
                         <h5>Interests</h5>
-                        <p class="text-muted" id="interests-text"><?php echo htmlspecialchars($interest_text); ?></p>
+                        <p class="text-muted" id="interests-text"> <?php echo htmlspecialchars($interest_text); ?></p>
                         <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editInterestsModal">Edit Interests</button>
-                        <hr>
+                    </div>
+                </div>
+                <div class="card shadow-lg">
+                    <div class="card-body">
                         <h5>Skills</h5>
-                        <p class="text-muted" id="skills-text"><?php echo htmlspecialchars($skill_text); ?></p>
+                        <p class="text-muted" id="skills-text"> <?php echo htmlspecialchars($skill_text); ?></p>
                         <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editSkillsModal">Edit Skills</button>
-
                     </div>
                 </div>
             </div>

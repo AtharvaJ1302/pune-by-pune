@@ -30,7 +30,7 @@ if (!$eventResult) {
 
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
-    
+
     $query = "SELECT pincode_id FROM users WHERE user_id = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
@@ -39,7 +39,7 @@ if (isset($_SESSION['user_id'])) {
     $stmt->bind_result($user_pincode_id);
     $stmt->fetch();
     $stmt->close();
-    
+
     if (isset($user_pincode_id)) {
         $eventQuery = "SELECT * FROM events WHERE pincode_id = ?";
         $stmt = $conn->prepare($eventQuery);
@@ -151,6 +151,40 @@ if (isset($_SESSION['user_id'])) {
             background-color: transparent;
             /* Scrollbar track color */
         }
+
+        .calendar {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        width: 100%;
+        text-align: center;
+    }
+    .calendar-day {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        border-radius: 5px;
+        font-weight: bold;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+    }
+    .past-event {
+        background-color: #ffadad; /* Light Red for past events */
+        color: white;
+    }
+    .today-event {
+        background-color: #ffeb3b; /* Yellow for today */
+        color: black;
+    }
+    .upcoming-event {
+        background-color: #98fb98; /* Light Green for upcoming */
+        color: black;
+    }
     </style>
 </head>
 
@@ -160,47 +194,90 @@ if (isset($_SESSION['user_id'])) {
             <aside class="col-md-3 mb-5">
                 <h3 class="mt-4">My Communities</h3>
                 <hr>
+
                 <?php if (isset($_SESSION['user_id'])): ?>
+                    <?php
+                    $userId = $_SESSION['user_id'];
+
+                    // Fetch created communities
+                    $createdQuery = "SELECT community_id, community_name FROM communities WHERE user_id = $userId AND status = 1";
+                    $createdResult = $conn->query($createdQuery);
+
+                    // Fetch joined communities
+                    $joinedQuery = "SELECT c.community_id, c.community_name FROM community_members cm 
+                        JOIN communities c ON cm.community_id = c.community_id 
+                        WHERE cm.user_id = $userId";
+                    $joinedResult = $conn->query($joinedQuery);
+
+                    // Fetch user's registered events from event_attendees table
+                    // $eventQuery = "SELECT e.event_id, e.event_time FROM event_attendees ea
+                    //    JOIN events e ON ea.event_id = e.event_id
+                    //    WHERE ea.user_id = $userId";
+                    // $eventResult = $conn->query($eventQuery);
+
+                    // $events = [];
+                    // while ($row = $eventResult->fetch_assoc()) {
+                    //     $events[date("Y-m-d", strtotime($row['event_time']))] = $row['event_id'];
+                    // }
+
+                    // $today = date("Y-m-d");
+                    ?>
+
                     <div>
                         <h5>Created Communities</h5>
                         <hr>
-                        <?php
-                        $userId = $_SESSION['user_id'];
-                        $createdQuery = "SELECT community_id, community_name FROM communities WHERE user_id = $userId AND status = 1";
-                        $createdResult = $conn->query($createdQuery);
-                        if ($createdResult->num_rows > 0):
-                            while ($row = $createdResult->fetch_assoc()):
-                        ?>
+                        <?php if ($createdResult->num_rows > 0): ?>
+                            <?php while ($row = $createdResult->fetch_assoc()): ?>
                                 <p><a href="community_info.php?community_id=<?php echo $row['community_id']; ?>"><?php echo htmlspecialchars($row['community_name']); ?></a></p>
-                        <?php
-                            endwhile;
-                        else:
-                            echo '<p>No created communities.</p>';
-                        endif;
-                        ?>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <p>No created communities.</p>
+                        <?php endif; ?>
                     </div>
 
                     <div class="mt-4">
                         <h5>Joined Communities</h5>
                         <hr>
-                        <?php
-                        $joinedQuery = "SELECT communities.community_id, communities.community_name FROM community_members 
-                            JOIN communities ON community_members.community_id = communities.community_id 
-                            WHERE community_members.user_id = $userId";
-                        $joinedResult = $conn->query($joinedQuery);
-                        if ($joinedResult->num_rows > 0):
-                            while ($row = $joinedResult->fetch_assoc()):
-                        ?>
+                        <?php if ($joinedResult->num_rows > 0): ?>
+                            <?php while ($row = $joinedResult->fetch_assoc()): ?>
                                 <p><a href="community_info.php?community_id=<?php echo $row['community_id']; ?>"><?php echo htmlspecialchars($row['community_name']); ?></a></p>
-                        <?php
-                            endwhile;
-                        else:
-                            echo '<p>No joined communities.</p>';
-                        endif;
-                        ?>
+                            <?php endwhile; ?>
+                        <?php else: ?>
+                            <p>No joined communities.</p>
+                        <?php endif; ?>
                     </div>
 
                     <a href="create_community.php" class="btn btn-primary w-100 mt-4">Create Community</a>
+
+                    <!-- <div class="mt-4">
+                        <h3>📅 My Events Calendar</h3>
+                        <hr>
+                        <div class="calendar">
+                            <?php
+                            $days_in_month = date("t");
+                            $current_month = date("Y-m");
+                            echo '<div class="calendar-grid">';
+                            for ($day = 1; $day <= $days_in_month; $day++) {
+                                $date = sprintf("%s-%02d", $current_month, $day);
+                                $class = "";
+
+                                if (isset($events[$date])) {
+                                    if ($date < $today) {
+                                        $class = "past-event";  // Past event color
+                                    } elseif ($date == $today) {
+                                        $class = "today-event"; // Today's event color
+                                    } else {
+                                        $class = "upcoming-event"; // Upcoming event color
+                                    }
+                                }
+
+                                echo "<div class='calendar-day $class'>$day</div>";
+                            }
+                            echo '</div>';
+                            ?>
+                        </div>
+                    </div> -->
+
                 <?php else: ?>
                     <p>Please log in to view your communities.</p>
                 <?php endif; ?>
@@ -219,7 +296,7 @@ if (isset($_SESSION['user_id'])) {
                             $counter = 0;
                             if ($result->num_rows > 0):
                                 while ($row = $result->fetch_assoc()) :
-                                    if ($counter >= $limit) break; 
+                                    if ($counter >= $limit) break;
                                     $counter++;
                             ?>
                                     <div class="col-md-4 mb-4 d-flex">
@@ -326,7 +403,7 @@ if (isset($_SESSION['user_id'])) {
         });
 
         function getRandomColor() {
-            const letters = "89ABCDEF"; 
+            const letters = "89ABCDEF";
             let color = "#";
             for (let i = 0; i < 6; i++) {
                 color += letters[Math.floor(Math.random() * letters.length)];

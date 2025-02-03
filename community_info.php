@@ -64,7 +64,7 @@ $members_result = $conn->query($members_sql);
 
 $current_time = date('Y-m-d H:i:s');
 $eventQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
-                             (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                             (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
                       FROM events e
                       WHERE e.event_time > ? AND e.community_id = ?
                       ORDER BY e.event_time ASC";
@@ -250,7 +250,7 @@ $eventPhotosResult = $stmt->get_result();
                                 <?php
                                 $current_time = date('Y-m-d H:i:s');
                                 $upcomingQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
-                                    (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                                    (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
                                 FROM events e
                                 WHERE e.event_time > ? AND e.community_id = ?
                                 ORDER BY e.event_time ASC";
@@ -293,7 +293,7 @@ $eventPhotosResult = $stmt->get_result();
                             <div id="past-events" style="display: none;">
                                 <?php
                                 $pastQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
-                                    (SELECT COUNT(*) FROM event_participants WHERE event_participants.event_id = e.event_id) AS attendees_count
+                                    (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
                                 FROM events e
                                 WHERE e.event_time <= ? AND e.community_id = ?
                                 ORDER BY e.event_time DESC";

@@ -160,6 +160,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($
     header("Location: community_admin_dashboard.php?community_id=" . $community_id); // Redirect back with community_id
     exit();
 }
+$sql_requests = "SELECT r.request_id, u.name, u.email, s.skill_name, c.city_name, p.pincode 
+FROM request r
+JOIN users u ON r.user_id = u.user_id
+JOIN skills s ON r.skill_ids = s.skill_id
+JOIN cities c ON r.city_id = c.city_id
+JOIN pincodes p ON r.pincode_id = p.pincode_id
+WHERE r.community_id = '$community_id' AND r.status = 0";
+
+$result_requests = $conn->query($sql_requests);
 ?>
 
 <!DOCTYPE html>
@@ -472,6 +481,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($
 
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
+        </div>
+
+        <div id="manage_requests" class="section mt-4">
+            <h3>Pending Requests</h3>
+            <?php if ($result_requests->num_rows > 0): ?>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Skill</th>
+                            <th>City</th>
+                            <th>Pincode</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $result_requests->fetch_assoc()): ?>
+                            <tr>
+                                <td><?php echo $row['name']; ?></td>
+                                <td><?php echo $row['email']; ?></td>
+                                <td><?php echo $row['skill_name']; ?></td>
+                                <td><?php echo $row['city_name']; ?></td>
+                                <td><?php echo $row['pincode']; ?></td>
+                                <td>
+                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=approve" class="btn btn-success">Approve</a>
+                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=reject" class="btn btn-danger">Reject</a>
+                                </td>
+
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>No pending requests.</p>
+            <?php endif; ?>
         </div>
 
 
