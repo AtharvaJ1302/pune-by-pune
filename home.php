@@ -17,8 +17,9 @@ $resultDomain = $conn->query($domains);
 $eventsQuery = "
     SELECT event_id, event_name, event_description, event_time
     FROM events
-    ORDER BY event_time DESC 
-    LIMIT 6 -- Limit the results to 6
+    WHERE event_time >= NOW()  -- Only events from the current time onward
+    ORDER BY event_time ASC   -- Order events in ascending order (upcoming events first)
+    LIMIT 6
 ";
 
 $eventResult = $conn->query($eventsQuery);
@@ -28,36 +29,6 @@ if (!$eventResult) {
     exit;
 }
 
-if (isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
-
-    $query = "SELECT pincode_id FROM users WHERE user_id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $stmt->store_result();
-    $stmt->bind_result($user_pincode_id);
-    $stmt->fetch();
-    $stmt->close();
-
-    if (isset($user_pincode_id)) {
-        $eventQuery = "SELECT * FROM events WHERE pincode_id = ?";
-        $stmt = $conn->prepare($eventQuery);
-        $stmt->bind_param("i", $user_pincode_id);
-        $stmt->execute();
-        $eventResult = $stmt->get_result();
-    } else {
-        $eventQuery = "SELECT * FROM events";
-        $stmt = $conn->prepare($eventQuery);
-        $stmt->execute();
-        $eventResult = $stmt->get_result();
-    }
-} else {
-    $eventQuery = "SELECT * FROM events";
-    $stmt = $conn->prepare($eventQuery);
-    $stmt->execute();
-    $eventResult = $stmt->get_result();
-}
 ?>
 
 <!DOCTYPE html>
@@ -153,38 +124,46 @@ if (isset($_SESSION['user_id'])) {
         }
 
         .calendar {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 5px;
-        width: 100%;
-        text-align: center;
-    }
-    .calendar-day {
-        width: 40px;
-        height: 40px;
-        line-height: 40px;
-        border-radius: 5px;
-        font-weight: bold;
-        border: 1px solid #ddd;
-        background-color: #f9f9f9;
-    }
-    .past-event {
-        background-color: #ffadad; /* Light Red for past events */
-        color: white;
-    }
-    .today-event {
-        background-color: #ffeb3b; /* Yellow for today */
-        color: black;
-    }
-    .upcoming-event {
-        background-color: #98fb98; /* Light Green for upcoming */
-        color: black;
-    }
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .calendar-day {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            border-radius: 5px;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .past-event {
+            background-color: #ffadad;
+            /* Light Red for past events */
+            color: white;
+        }
+
+        .today-event {
+            background-color: #ffeb3b;
+            /* Yellow for today */
+            color: black;
+        }
+
+        .upcoming-event {
+            background-color: #98fb98;
+            /* Light Green for upcoming */
+            color: black;
+        }
     </style>
 </head>
 
@@ -209,18 +188,7 @@ if (isset($_SESSION['user_id'])) {
                         WHERE cm.user_id = $userId";
                     $joinedResult = $conn->query($joinedQuery);
 
-                    // Fetch user's registered events from event_attendees table
-                    // $eventQuery = "SELECT e.event_id, e.event_time FROM event_attendees ea
-                    //    JOIN events e ON ea.event_id = e.event_id
-                    //    WHERE ea.user_id = $userId";
-                    // $eventResult = $conn->query($eventQuery);
 
-                    // $events = [];
-                    // while ($row = $eventResult->fetch_assoc()) {
-                    //     $events[date("Y-m-d", strtotime($row['event_time']))] = $row['event_id'];
-                    // }
-
-                    // $today = date("Y-m-d");
                     ?>
 
                     <div>
@@ -249,35 +217,6 @@ if (isset($_SESSION['user_id'])) {
 
                     <a href="create_community.php" class="btn btn-primary w-100 mt-4">Create Community</a>
 
-                    <!-- <div class="mt-4">
-                        <h3>📅 My Events Calendar</h3>
-                        <hr>
-                        <div class="calendar">
-                            <?php
-                            $days_in_month = date("t");
-                            $current_month = date("Y-m");
-                            echo '<div class="calendar-grid">';
-                            for ($day = 1; $day <= $days_in_month; $day++) {
-                                $date = sprintf("%s-%02d", $current_month, $day);
-                                $class = "";
-
-                                if (isset($events[$date])) {
-                                    if ($date < $today) {
-                                        $class = "past-event";  // Past event color
-                                    } elseif ($date == $today) {
-                                        $class = "today-event"; // Today's event color
-                                    } else {
-                                        $class = "upcoming-event"; // Upcoming event color
-                                    }
-                                }
-
-                                echo "<div class='calendar-day $class'>$day</div>";
-                            }
-                            echo '</div>';
-                            ?>
-                        </div>
-                    </div> -->
-
                 <?php else: ?>
                     <p>Please log in to view your communities.</p>
                 <?php endif; ?>
@@ -302,7 +241,7 @@ if (isset($_SESSION['user_id'])) {
                                     <div class="col-md-4 mb-4 d-flex">
                                         <a href="community_info.php?community_id=<?php echo $row['community_id']; ?>" class="community-card">
                                             <div class="card h-100 w-100">
-                                                <img src="<?php echo $row['image_path']; ?>" class="card-img-top community-image" alt="Community Image" style="object-fit: contain; width: 90%; height: auto; border-radius: 15px;">
+                                                <img src="<?php echo $row['image_path']; ?>" class="card-img-top community-image" alt="Community Image" style="object-fit: contain; width: 90%; height: 90%; border-radius: 15px;">
                                                 <div class="card-body d-flex flex-column">
                                                     <h5 class="card-title"><?php echo $row['community_name']; ?></h5>
                                                     <p class="card-text flex-grow-1"><?php echo $row['community_description']; ?></p>
@@ -334,7 +273,7 @@ if (isset($_SESSION['user_id'])) {
                             <?php
                             if ($eventResult->num_rows > 0):
                                 while ($row = $eventResult->fetch_assoc()):
-                                    $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                                    $formatted_time = date('D, M j, Y, g:i A ', strtotime($row['event_time']));
                                     $colors = ['#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'];
                                     $random_color = $colors[array_rand($colors)];
                             ?>

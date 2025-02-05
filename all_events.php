@@ -30,7 +30,7 @@ $colors = [
             <?php
             if ($eventResult->num_rows > 0):
                 while ($row = $eventResult->fetch_assoc()):
-                    $formatted_time = date('D, M j, Y, g:i A T', strtotime($row['event_time']));
+                    $formatted_time = date('D, M j, Y, g:i A ', strtotime($row['event_time']));
 
                     $random_color = $colors[array_rand($colors)];
             ?>

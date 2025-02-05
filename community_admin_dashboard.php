@@ -6,13 +6,14 @@ $community_id = isset($_GET['community_id']) ? $_GET['community_id'] : null;
 
 if ($community_id) {
     $sql = "
-        SELECT u.name, u.age, s.state_name, c.city_name, p.pincode, GROUP_CONCAT(sk.skill_name) AS skills
+        SELECT u.name, u.age, s.state_name, c.city_name, p.pincode, 
+               GROUP_CONCAT(sk.skill_name ORDER BY sk.skill_name SEPARATOR ', ') AS skills
         FROM users u
         INNER JOIN cities c ON u.city_id = c.city_id
         INNER JOIN states s ON u.state_id = s.state_id
         INNER JOIN pincodes p ON u.pincode_id = p.pincode_id
         LEFT JOIN user_skills us ON u.user_id = us.user_id
-        LEFT JOIN skills sk ON us.skill_ids = sk.skill_id
+        LEFT JOIN skills sk ON FIND_IN_SET(sk.skill_id, us.skill_ids)
         WHERE u.user_id IN (
             SELECT user_id FROM community_members WHERE community_id = '$community_id'
         )
@@ -24,6 +25,7 @@ if ($community_id) {
     echo "Community ID is missing.";
     exit;
 }
+
 
 if ($community_id) {
     $community_sql = "
@@ -57,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['create_event'])) {
     $stmt = $conn->prepare($sql);
 
     if ($stmt) {
-        // Bind the parameters (including state_id, city_id, pincode_id)
         $stmt->bind_param("issssiii", $community_id, $event_name, $event_description, $event_time, $event_location, $state_id, $city_id, $pincode_id);
 
         if ($stmt->execute()) {
@@ -102,35 +103,32 @@ $stmt->execute();
 $uploadPostResult = $stmt->get_result();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($_POST['event_id'])) {
-    // Get community_id from the URL
     if (isset($_GET['community_id'])) {
         $community_id = intval($_GET['community_id']);
     } else {
         die("Community ID not provided!");
     }
 
-    $event_id = intval($_POST['event_id']); // Get event ID from the form
+    $event_id = intval($_POST['event_id']);
     $uploadDir = "uploads/community_event/photos/";
     $uploadedFiles = [];
 
-    // Ensure the upload directory exists
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
 
     foreach ($_FILES['photos']['tmp_name'] as $key => $tmp_name) {
         $fileName = basename($_FILES['photos']['name'][$key]);
-        $filePath = $uploadDir . time() . "_" . $fileName; // Unique filename
+        $filePath = $uploadDir . time() . "_" . $fileName;
 
         if (move_uploaded_file($tmp_name, $filePath)) {
-            $uploadedFiles[] = $filePath; // Store the file path
+            $uploadedFiles[] = $filePath;
         }
     }
 
     if (!empty($uploadedFiles)) {
-        $photoString = implode(',', $uploadedFiles); // Convert array to comma-separated string
+        $photoString = implode(',', $uploadedFiles);
 
-        // Check if a record already exists for the same community and event
         $sql = "SELECT photos FROM event_photos WHERE community_id = ? AND event_id = ?";
         $stmt = $conn->prepare($sql);
         $stmt->bind_param("ii", $community_id, $event_id);
@@ -138,18 +136,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($
         $stmt->store_result();
 
         if ($stmt->num_rows > 0) {
-            // Fetch existing photos and append new ones
             $stmt->bind_result($existingPhotos);
             $stmt->fetch();
             $updatedPhotos = empty($existingPhotos) ? $photoString : $existingPhotos . ',' . $photoString;
 
-            // Update existing record
             $updateSql = "UPDATE event_photos SET photos = ? WHERE community_id = ? AND event_id = ?";
             $updateStmt = $conn->prepare($updateSql);
             $updateStmt->bind_param("sii", $updatedPhotos, $community_id, $event_id);
             $updateStmt->execute();
         } else {
-            // Insert new record
             $insertSql = "INSERT INTO event_photos (community_id, event_id, photos) VALUES (?, ?, ?)";
             $insertStmt = $conn->prepare($insertSql);
             $insertStmt->bind_param("iis", $community_id, $event_id, $photoString);
@@ -157,18 +152,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['photos']) && isset($
         }
     }
 
-    header("Location: community_admin_dashboard.php?community_id=" . $community_id); // Redirect back with community_id
+    header("Location: community_admin_dashboard.php?community_id=" . $community_id);
     exit();
 }
-$sql_requests = "SELECT r.request_id, u.name, u.email, s.skill_name, c.city_name, p.pincode 
+
+$sql_requests = "SELECT r.request_id, u.name, u.email, r.skill_ids, c.city_name, p.pincode, r.document_path
 FROM request r
 JOIN users u ON r.user_id = u.user_id
-JOIN skills s ON r.skill_ids = s.skill_id
 JOIN cities c ON r.city_id = c.city_id
 JOIN pincodes p ON r.pincode_id = p.pincode_id
 WHERE r.community_id = '$community_id' AND r.status = 0";
 
 $result_requests = $conn->query($sql_requests);
+
+$requests = [];
+
+while ($row = $result_requests->fetch_assoc()) {
+    // Fetch all skill names using the comma-separated skill_ids
+    $skill_ids = explode(',', $row['skill_ids']);
+    $skill_names = [];
+
+    if (!empty($skill_ids)) {
+        $sql_skills = "SELECT skill_name FROM skills WHERE skill_id IN (" . implode(',', array_map('intval', $skill_ids)) . ")";
+        $result_skills = $conn->query($sql_skills);
+
+        while ($skill = $result_skills->fetch_assoc()) {
+            $skill_names[] = $skill['skill_name'];
+        }
+    }
+
+    // Store request data
+    $row['skill_names'] = implode(', ', $skill_names);
+    $requests[] = $row;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
+    $user_id = intval($_POST['user_id']);
+    $role = $conn->real_escape_string($_POST['id']);
+    
+    // Check if the role already exists for the user in the community
+    $check_sql = "SELECT * FROM community_members WHERE user_id = ? AND community_id = ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("ii", $user_id, $community_id);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+
+    if ($check_result->num_rows > 0) {
+        // Update existing role
+        $update_sql = "UPDATE community_members SET role_id = ? WHERE user_id = ? AND community_id = ?";
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("sii", $role, $user_id, $community_id);
+        $update_stmt->execute();
+        echo "<script>alert('Role updated successfully.');</script>";
+    } else {
+        // Insert new role
+        $insert_sql = "INSERT INTO community_members (user_id, community_id, role_id) VALUES (?, ?, ?)";
+        $insert_stmt = $conn->prepare($insert_sql);
+        $insert_stmt->bind_param("sii", $user_id, $community_id, $role);
+        $insert_stmt->execute();
+        echo "<script>alert('Role assigned successfully.');</script>";
+    }
+}
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -180,6 +227,10 @@ $result_requests = $conn->query($sql_requests);
     <title>Admin Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet"> <!-- Bootstrap Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+
+
     <style>
         /* Sidebar styles */
         .sidebar {
@@ -220,6 +271,41 @@ $result_requests = $conn->query($sql_requests);
         .active-section {
             display: block;
         }
+
+        .id-card {
+            width: 250px;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            background: #f9f9f9;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .id-card img {
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .id-card h5 {
+            margin-bottom: 5px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .id-card p {
+            margin: 2px 0;
+            font-size: 14px;
+        }
+
+        #event_id,
+        #event_select {
+            width: 200px;
+        }
+
+        #photos {
+            width: 250px;
+        }
     </style>
     <script src="./ckeditor/ckeditor.js"></script>
 </head>
@@ -256,6 +342,11 @@ $result_requests = $conn->query($sql_requests);
             <li class="nav-item">
                 <a class="nav-link d-flex align-items-center" href="javascript:void(0)" onclick="showSection('create_event')">
                     <i class="bi bi-pencil-square me-2"></i> Create Event
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center" href="javascript:void(0)" onclick="showSection('id_cards')">
+                    <i class="bi bi-pencil-square me-2"></i> ID Cards
                 </a>
             </li>
             <br><br>
@@ -340,7 +431,7 @@ $result_requests = $conn->query($sql_requests);
             <?php endif; ?>
         </div>
 
-        <div id="create_event" class="section">
+        <div id="create_event" class="section mt-4">
             <h1 class="mb-4">Event Creation</h1>
             <form action="" method="POST">
                 <div class="mb-3">
@@ -461,6 +552,50 @@ $result_requests = $conn->query($sql_requests);
             </div>
         </div>
 
+        <div id="assign_roles" class="section">
+            <h1>Assign Roles</h1>
+            <form action="" method="POST">
+                <div class="mb-3">
+                    <label for="user_id" class="form-label">Select User:</label>
+                    <select name="user_id" id="user_id" class="form-select" required>
+                        <option value="">-- Select a User --</option>
+                        <?php
+                        // Fetch users in the community
+                        $user_query = "SELECT u.user_id, u.name FROM users u 
+                                    INNER JOIN community_members cm ON u.user_id = cm.user_id 
+                                    WHERE cm.community_id = ?";
+                        $stmt = $conn->prepare($user_query);
+                        $stmt->bind_param("i", $community_id);
+                        $stmt->execute();
+                        $user_result = $stmt->get_result();
+
+                        while ($user = $user_result->fetch_assoc()) {
+                            echo "<option value='{$user['user_id']}'>" . htmlspecialchars($user['name']) . "</option>";
+                        }
+                        ?>
+                    </select>
+
+                </div>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label">Select Role:</label>
+                    <select name="id" id="id" class="form-select" required>
+                        <option value="">-- Select a Role --</option>
+                        <?php
+                                    $role_query = "SELECT id, role_name FROM roles";
+                                    $role_result = $conn->query($role_query);
+                                    while ($role = $role_result->fetch_assoc()) {
+                                        echo "<option value='{$role['id']}'>{$role['role_name']}</option>";
+                                    }
+                                ?>
+                    </select>
+                </div>
+
+                <button type="submit" name="assign_role" class="btn btn-primary">Assign Role</button>
+            </form>
+
+        </div>
+
         <div id="create_post" class="section mt-4">
             <h4>Create Event Photos</h4>
             <form action="" method="POST" enctype="multipart/form-data">
@@ -485,33 +620,44 @@ $result_requests = $conn->query($sql_requests);
 
         <div id="manage_requests" class="section mt-4">
             <h3>Pending Requests</h3>
-            <?php if ($result_requests->num_rows > 0): ?>
+            <?php if (!empty($requests)): ?>
                 <table class="table">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Skill</th>
+                            <th>Skills</th>
                             <th>City</th>
                             <th>Pincode</th>
+                            <th>Verification Document</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while ($row = $result_requests->fetch_assoc()): ?>
+                        <?php foreach ($requests as $row): ?>
                             <tr>
-                                <td><?php echo $row['name']; ?></td>
-                                <td><?php echo $row['email']; ?></td>
-                                <td><?php echo $row['skill_name']; ?></td>
-                                <td><?php echo $row['city_name']; ?></td>
-                                <td><?php echo $row['pincode']; ?></td>
+                                <td><?php echo htmlspecialchars($row['name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['email']); ?></td>
+                                <td><?php echo htmlspecialchars($row['skill_names']); ?></td> <!-- Shows all skills -->
+                                <td><?php echo htmlspecialchars($row['city_name']); ?></td>
+                                <td><?php echo htmlspecialchars($row['pincode']); ?></td>
                                 <td>
-                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=approve" class="btn btn-success">Approve</a>
-                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=reject" class="btn btn-danger">Reject</a>
+                                    <?php if (!empty($row['document_path'])): ?>
+                                        <button type="button" class="btn btn-info view-document"
+                                            data-bs-toggle="modal" data-bs-target="#documentModal"
+                                            data-document="<?php echo htmlspecialchars($row['document_path']); ?>">
+                                            View
+                                        </button>
+                                    <?php else: ?>
+                                        No document uploaded
+                                    <?php endif; ?>
                                 </td>
-
+                                <td>
+                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=approve" class="btn btn-success m-2">Approve</a>
+                                    <a href="request.php?request_id=<?php echo $row['request_id']; ?>&action=reject" class="btn btn-danger m-2">Reject</a>
+                                </td>
                             </tr>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php else: ?>
@@ -520,7 +666,49 @@ $result_requests = $conn->query($sql_requests);
         </div>
 
 
+        <div id="id_cards" class="section mt-4">
+            <label for="event_select">Select Event:</label>
+            <select id="event_select" class="form-control" onchange="filterByEvent()">
+                <option value="all">All Events</option>
+            </select>
+            <button class="btn btn-primary download-btn mt-2" onclick="downloadAllIDCards()">Download All ID Cards</button>
+            <div id="id_card_container" class="d-flex flex-wrap gap-3 mt-3"></div>
+        </div>
+
     </div>
+
+    <!-- modal form for viewing verification document -->
+    <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentModalLabel">Verification Document</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <iframe id="documentFrame" src="" width="100%" height="500px" style="border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var documentModal = document.getElementById("documentModal");
+            documentModal.addEventListener("show.bs.modal", function(event) {
+                var button = event.relatedTarget;
+                var documentPath = button.getAttribute("data-document");
+                var documentFrame = document.getElementById("documentFrame");
+
+                if (documentPath) {
+                    documentFrame.src = documentPath;
+                } else {
+                    documentFrame.src = "";
+                }
+            });
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -584,6 +772,133 @@ $result_requests = $conn->query($sql_requests);
         window.onbeforeunload = function() {
             window.location.href = "community_info.php";
         };
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetchData();
+        });
+
+        function fetchData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const communityId = urlParams.get("community_id");
+
+            fetch(`fetch_id_cards.php?community_id=${communityId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        populateEventDropdown(data.events);
+                        displayIDCards(data.users);
+                    } else {
+                        document.getElementById("id_card_container").innerHTML = "<p>No users found</p>";
+                    }
+                })
+                .catch(error => console.error("Error fetching data:", error));
+        }
+
+        function populateEventDropdown(events) {
+            let eventSelect = document.getElementById("event_select");
+            eventSelect.innerHTML = "<option value='all'>All Events</option>";
+
+            events.forEach(event => {
+                let option = document.createElement("option");
+                option.value = event.event_id;
+                option.textContent = event.event_name;
+                eventSelect.appendChild(option);
+            });
+        }
+
+        function displayIDCards(users) {
+            let container = document.getElementById("id_card_container");
+            container.innerHTML = "";
+            users.forEach(user => {
+                let card = document.createElement("div");
+                card.classList.add("id-card", "card", "p-3", "shadow-sm");
+                card.innerHTML = `
+                <img src="${user.photo}" alt="Profile Picture" class="card-img-top rounded-circle" style="width: 100%; height: 200px; object-fit: cover;">
+                <h5>${user.name}</h5>
+                <p><strong>City:</strong> ${user.city}</p>
+                <p><strong>Domain:</strong> ${user.domain}</p>
+                <p><strong>Stream:</strong> ${user.stream}</p>
+                <p><strong>Phone:</strong> ${user.phone_number}</p>
+            `;
+                card.setAttribute("data-event", user.event_id);
+                container.appendChild(card);
+            });
+        }
+
+        function filterByEvent() {
+            let selectedEvent = document.getElementById("event_select").value;
+            document.querySelectorAll(".id-card").forEach(card => {
+                if (selectedEvent === "all" || card.getAttribute("data-event") === selectedEvent) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        function downloadAllIDCards() {
+            const selectedEvent = document.getElementById("event_select").value;
+            const cards = document.querySelectorAll(".id-card");
+
+            let filteredCards = Array.from(cards).filter(card => {
+                return selectedEvent === "all" || card.getAttribute("data-event") === selectedEvent;
+            });
+
+            if (filteredCards.length === 0) {
+                alert("No ID cards found for the selected event.");
+                return;
+            }
+
+            let images = [];
+            let captureCard = (index) => {
+                if (index >= filteredCards.length) {
+                    zipDownload(images);
+                    return;
+                }
+
+                html2canvas(filteredCards[index], {
+                    useCORS: true
+                }).then(canvas => {
+                    images.push({
+                        name: `id_card_${index + 1}.png`,
+                        data: canvas.toDataURL("image/png")
+                    });
+                    captureCard(index + 1);
+                }).catch(error => console.error(`Error capturing ID card ${index + 1}:`, error));
+            };
+
+            captureCard(0);
+        }
+
+
+        function zipDownload(images) {
+            if (images.length === 0) {
+                alert("No images captured.");
+                return;
+            }
+
+            let zip = new JSZip();
+            images.forEach(img => {
+                let imgData = img.data.split(',')[1];
+                zip.file(img.name, imgData, {
+                    base64: true
+                });
+            });
+
+            zip.generateAsync({
+                type: "blob"
+            }).then(content => {
+                let blobUrl = URL.createObjectURL(content);
+                let link = document.createElement("a");
+                link.href = blobUrl;
+                link.download = "ID_Cards.zip";
+                document.body.appendChild(link); // Ensure the link is added to the DOM
+                link.click();
+                document.body.removeChild(link); // Remove it after click
+                URL.revokeObjectURL(blobUrl); // Free up memory
+            }).catch(error => console.error("Error generating ZIP file:", error));
+        }
     </script>
 </body>
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Feb 03, 2025 at 05:40 AM
+-- Generation Time: Feb 05, 2025 at 03:37 AM
 -- Server version: 9.1.0
 -- PHP Version: 8.3.14
 
@@ -122,20 +122,19 @@ CREATE TABLE IF NOT EXISTS `community_members` (
   `user_id` int NOT NULL,
   `community_id` int NOT NULL,
   `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `status` enum('pending','accepted','rejected') DEFAULT 'pending',
+  `role_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`,`community_id`),
-  KEY `fk_community_id` (`community_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `fk_community_id` (`community_id`),
+  KEY `fk_member` (`role_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `community_members`
 --
 
-INSERT INTO `community_members` (`id`, `user_id`, `community_id`, `joined_at`, `status`) VALUES
-(18, 13, 3, '2025-02-03 05:32:30', 'pending'),
-(17, 17, 3, '2025-02-03 05:32:24', 'pending'),
-(16, 13, 7, '2025-02-03 03:23:51', 'pending');
+INSERT INTO `community_members` (`id`, `user_id`, `community_id`, `joined_at`, `role_id`) VALUES
+(1, 21, 3, '2025-02-04 16:49:38', 1);
 
 -- --------------------------------------------------------
 
@@ -155,21 +154,23 @@ CREATE TABLE IF NOT EXISTS `events` (
   `state_id` int NOT NULL,
   `city_id` int NOT NULL,
   `pincode_id` int NOT NULL,
+  `status` varchar(50) DEFAULT 'active',
   PRIMARY KEY (`event_id`),
   KEY `community_id` (`community_id`),
   KEY `fk_state` (`state_id`),
   KEY `fk_city` (`city_id`),
   KEY `fk_pincode` (`pincode_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `events`
 --
 
-INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`, `location`, `state_id`, `city_id`, `pincode_id`) VALUES
-(5, 4, 'Java meetup', '<h2>Details</h2>\r\n\r\n<p>In collaboration with Nelkinda Software Craft and Equal Experts:</p>\r\n\r\n<p>This meetup is a combination of two talks<br />\r\n<em><strong>1. Why Learn Functional Programming by Anshul Chauhan.</strong></em><br />\r\nDuring this talk, we will learn about the Functional Programming paradigm. Anshul Chauhan will guide us through the basics and key vocabulary of functional programming. Through concrete examples, we will observe how Functional Programming can offer a compelling alternative to Object-Oriented Programming (OOP), potentially enhancing our daily coding tasks.</p>\r\n\r\n<p><em><strong>2. Singleton Paradox: Revisiting Advanced Java Through a Practical Lens by Nikhil Wanpal.</strong></em><br />\r\nSingleton design pattern ensures that only one object of a class exists at runtime. Is it really possible in Java though? During the course of this discussion, we attempt to implement a Singleton in Java and revisit aspects of Java like classes, static state, synchronisation, serialisation and class loading.</p>\r\n\r\n<p><strong>Agenda</strong></p>\r\n\r\n<ul>\r\n	<li>10:00 am - 10:15 am &ndash; Introduction</li>\r\n	<li>10:15 am - 11:00 am &ndash; Talk1: Why Learn Fucntional Programming.</li>\r\n	<li>11:00 am - 11:15 am &ndash; Q &amp; A session + Break 1</li>\r\n	<li>11:15 am - 12:25 pm &ndash; Talk 2: Singleton Paradox: Revisiting Advanced Java Through a Practical Lens.</li>\r\n	<li>12:25 pm - 01:30 pm &ndash; Talk 2 + Q&amp;A</li>\r\n	<li>01:30 pm - 02:00 pm &ndash; Networking</li>\r\n</ul>\r\n\r\n<p>(collaborating meetup groups: Nelkinda Software Craft Pune Meetup, Expert Talks)<br />\r\n<br />\r\n<img alt=\"\" src=\"https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2019/07/EventHandling-In-Java.jpg\" style=\"height:175px; width:300px\" /></p>\r\n', '2025-01-28 09:32:00', '2025-01-28 04:03:03', 'Warje', 0, 0, 0),
-(4, 3, 'PyData Meetup 2025', '<h2><strong>Details</strong></h2>\r\n\r\n<p>Hello Pythonistas :)</p>\r\n\r\n<p>Happy New Year!</p>\r\n\r\n<p>This time we are having a free-flowing discussion about Python, Python libraries, projects, coding challenges, or anything else of your interest.</p>\r\n\r\n<p>The meetup welcomes Python novices as well as experts. If you need help with an existing project, bring it. If you want to interact with other Pythonistas, do join and say hello.</p>\r\n\r\n<p><strong>How to join?</strong></p>\r\n\r\n<p>Join this video conference link<br />\r\n[<a href=\"https://meet.jit.si/PythonPuneJan25\" target=\"_blank\">https://meet.jit.si/PythonPuneJan25</a>](https://meet.jit.si/PythonPuneJan25)</p>\r\n\r\n<p>Note: Every attendee should follow the PythonPune Code of Conduct during meetup [<a href=\"https://pythonpune.in/code-of-conduct\" target=\"_blank\">https://pythonpune.in/code-of-conduct</a>](https://pythonpune.in/code-of-conduct)</p>\r\n\r\n<p>----</p>\r\n\r\n<p>You are always welcome to talk about anything you are working on, be it a small Python program you wrote, or a new library you tried. Please create a GitHub issue.<br />\r\n[<a href=\"https://github.com/pythonpune/meetup-talks/issues/new/choose\" target=\"_blank\">https://github.com/pythonpune/meetup-talks/issues/new/choose</a>](https://github.com/pythonpune/meetup-talks/issues/new/choose)</p>\r\n', '2025-01-29 13:30:00', '2025-01-27 18:53:59', 'MITWPU, Pune', 0, 0, 0),
-(6, 7, 'MulticloudWorld 2025 - Pune', '<h2>Details</h2>\r\n\r\n<p>🌐&nbsp;<strong>MulticloudWorld 2025: Unlock the Future of Cloud Innovation!</strong>&nbsp;🌐<br />\r\nGet ready for the ultimate cloud event of the year! MulticloudWorld 2025 is coming to a city near you, bringing together world-class speakers from Oracle, Google, AWS, industry-leading customers, and many more.</p>\r\n\r\n<p><strong>Coming to a city near you:</strong><br />\r\n2-Feb-2025, Sunday -&nbsp;<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">Pune</a></p>\r\n\r\n<p>🔥&nbsp;<strong>What to Expect:</strong><br />\r\n👉 Inspiring Keynotes: Visionary insights from top-notch speakers.<br />\r\n👉 Deep-Dive Sessions: Hands-on learning and in-depth technical talks on cutting-edge Oracle Multicloud Solutions.<br />\r\n👉 Networking Opportunities: Connect with industry leaders, peers, and experts.</p>\r\n\r\n<p>💡 Shape the Future with Oracle Multicloud Solutions! Whether you&#39;re a developer, architect, or IT leader, this is your chance to stay ahead in the multicloud revolution.</p>\r\n\r\n<p>🎟️ Don&#39;t Wait&mdash;register now at [<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">https://www.aioug.org/mc/2025/pnq</a>](https://www.aioug.org/mc/2025/pnq) for the Early Bird Offer! Spots are limited, so secure your place today and be part of the next big thing in cloud innovation.</p>\r\n', '2025-01-31 13:00:00', '2025-01-28 05:27:58', 'Mumbai, Maharashtra', 0, 0, 0);
+INSERT INTO `events` (`event_id`, `community_id`, `event_name`, `event_description`, `event_time`, `created_at`, `location`, `state_id`, `city_id`, `pincode_id`, `status`) VALUES
+(5, 4, 'Java meetup', '<h2>Details</h2>\r\n\r\n<p>In collaboration with Nelkinda Software Craft and Equal Experts:</p>\r\n\r\n<p>This meetup is a combination of two talks<br />\r\n<em><strong>1. Why Learn Functional Programming by Anshul Chauhan.</strong></em><br />\r\nDuring this talk, we will learn about the Functional Programming paradigm. Anshul Chauhan will guide us through the basics and key vocabulary of functional programming. Through concrete examples, we will observe how Functional Programming can offer a compelling alternative to Object-Oriented Programming (OOP), potentially enhancing our daily coding tasks.</p>\r\n\r\n<p><em><strong>2. Singleton Paradox: Revisiting Advanced Java Through a Practical Lens by Nikhil Wanpal.</strong></em><br />\r\nSingleton design pattern ensures that only one object of a class exists at runtime. Is it really possible in Java though? During the course of this discussion, we attempt to implement a Singleton in Java and revisit aspects of Java like classes, static state, synchronisation, serialisation and class loading.</p>\r\n\r\n<p><strong>Agenda</strong></p>\r\n\r\n<ul>\r\n	<li>10:00 am - 10:15 am &ndash; Introduction</li>\r\n	<li>10:15 am - 11:00 am &ndash; Talk1: Why Learn Fucntional Programming.</li>\r\n	<li>11:00 am - 11:15 am &ndash; Q &amp; A session + Break 1</li>\r\n	<li>11:15 am - 12:25 pm &ndash; Talk 2: Singleton Paradox: Revisiting Advanced Java Through a Practical Lens.</li>\r\n	<li>12:25 pm - 01:30 pm &ndash; Talk 2 + Q&amp;A</li>\r\n	<li>01:30 pm - 02:00 pm &ndash; Networking</li>\r\n</ul>\r\n\r\n<p>(collaborating meetup groups: Nelkinda Software Craft Pune Meetup, Expert Talks)<br />\r\n<br />\r\n<img alt=\"\" src=\"https://d1jnx9ba8s6j9r.cloudfront.net/blog/wp-content/uploads/2019/07/EventHandling-In-Java.jpg\" style=\"height:175px; width:300px\" /></p>\r\n', '2025-01-28 09:32:00', '2025-01-28 04:03:03', 'Warje', 0, 0, 0, 'active'),
+(4, 3, 'PyData Meetup 2025', '<h2><strong>Details</strong></h2>\r\n\r\n<p>Hello Pythonistas :)</p>\r\n\r\n<p>Happy New Year!</p>\r\n\r\n<p>This time we are having a free-flowing discussion about Python, Python libraries, projects, coding challenges, or anything else of your interest.</p>\r\n\r\n<p>The meetup welcomes Python novices as well as experts. If you need help with an existing project, bring it. If you want to interact with other Pythonistas, do join and say hello.</p>\r\n\r\n<p><strong>How to join?</strong></p>\r\n\r\n<p>Join this video conference link<br />\r\n[<a href=\"https://meet.jit.si/PythonPuneJan25\" target=\"_blank\">https://meet.jit.si/PythonPuneJan25</a>](https://meet.jit.si/PythonPuneJan25)</p>\r\n\r\n<p>Note: Every attendee should follow the PythonPune Code of Conduct during meetup [<a href=\"https://pythonpune.in/code-of-conduct\" target=\"_blank\">https://pythonpune.in/code-of-conduct</a>](https://pythonpune.in/code-of-conduct)</p>\r\n\r\n<p>----</p>\r\n\r\n<p>You are always welcome to talk about anything you are working on, be it a small Python program you wrote, or a new library you tried. Please create a GitHub issue.<br />\r\n[<a href=\"https://github.com/pythonpune/meetup-talks/issues/new/choose\" target=\"_blank\">https://github.com/pythonpune/meetup-talks/issues/new/choose</a>](https://github.com/pythonpune/meetup-talks/issues/new/choose)</p>\r\n', '2025-01-29 13:30:00', '2025-01-27 18:53:59', 'MITWPU, Pune', 0, 0, 0, 'active'),
+(6, 7, 'MulticloudWorld 2025 - Pune', '<h2>Details</h2>\r\n\r\n<p>🌐&nbsp;<strong>MulticloudWorld 2025: Unlock the Future of Cloud Innovation!</strong>&nbsp;🌐<br />\r\nGet ready for the ultimate cloud event of the year! MulticloudWorld 2025 is coming to a city near you, bringing together world-class speakers from Oracle, Google, AWS, industry-leading customers, and many more.</p>\r\n\r\n<p><strong>Coming to a city near you:</strong><br />\r\n2-Feb-2025, Sunday -&nbsp;<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">Pune</a></p>\r\n\r\n<p>🔥&nbsp;<strong>What to Expect:</strong><br />\r\n👉 Inspiring Keynotes: Visionary insights from top-notch speakers.<br />\r\n👉 Deep-Dive Sessions: Hands-on learning and in-depth technical talks on cutting-edge Oracle Multicloud Solutions.<br />\r\n👉 Networking Opportunities: Connect with industry leaders, peers, and experts.</p>\r\n\r\n<p>💡 Shape the Future with Oracle Multicloud Solutions! Whether you&#39;re a developer, architect, or IT leader, this is your chance to stay ahead in the multicloud revolution.</p>\r\n\r\n<p>🎟️ Don&#39;t Wait&mdash;register now at [<a href=\"https://www.aioug.org/mc/2025/pnq\" target=\"_blank\">https://www.aioug.org/mc/2025/pnq</a>](https://www.aioug.org/mc/2025/pnq) for the Early Bird Offer! Spots are limited, so secure your place today and be part of the next big thing in cloud innovation.</p>\r\n', '2025-01-31 13:00:00', '2025-01-28 05:27:58', 'Mumbai, Maharashtra', 0, 0, 0, 'active'),
+(11, 3, 'demo event', '<p>abcdefghijklmnop</p>\r\n', '2025-02-04 14:09:00', '2025-02-03 08:39:52', 'kothrud', 1, 2, 6, 'active');
 
 -- --------------------------------------------------------
 
@@ -191,16 +192,7 @@ CREATE TABLE IF NOT EXISTS `event_attendees` (
   KEY `event_id` (`event_id`),
   KEY `user_id` (`user_id`),
   KEY `pincode_id` (`pincode_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
---
--- Dumping data for table `event_attendees`
---
-
-INSERT INTO `event_attendees` (`id`, `event_id`, `user_id`, `domain`, `stream`, `profile_photo`, `pincode_id`, `mobile_number`) VALUES
-(2, 6, 11, 'IT', 'Mobile App Developer', 'uploads/profile_pictures/11_PP.jpg', 4, ''),
-(3, 6, 13, 'Accounts', 'CA', NULL, 10, ''),
-(4, 5, 13, 'Food', 'Chef', 'uploads/profile_pictures/13_jd PHOTO.jpg', 10, '9730854431');
+) ENGINE=MyISAM AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -351,25 +343,49 @@ CREATE TABLE IF NOT EXISTS `request` (
   `request_id` int NOT NULL AUTO_INCREMENT,
   `community_id` int DEFAULT NULL,
   `user_id` int DEFAULT NULL,
-  `skill_ids` int DEFAULT NULL,
+  `skill_ids` varchar(255) DEFAULT NULL,
   `city_id` int DEFAULT NULL,
   `pincode_id` int DEFAULT NULL,
   `status` tinyint(1) DEFAULT '0',
+  `document_path` varchar(255) NOT NULL,
   PRIMARY KEY (`request_id`),
   KEY `community_id` (`community_id`),
   KEY `user_id` (`user_id`),
-  KEY `skill_id` (`skill_ids`),
+  KEY `skill_id` (`skill_ids`(250)),
   KEY `city_id` (`city_id`),
   KEY `pincode_id` (`pincode_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `request`
+-- Table structure for table `roles`
 --
 
-INSERT INTO `request` (`request_id`, `community_id`, `user_id`, `skill_ids`, `city_id`, `pincode_id`, `status`) VALUES
-(2, 3, 17, 1, 1, 1, 1),
-(3, 3, 13, 4, 4, 10, 1);
+DROP TABLE IF EXISTS `roles`;
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`id`, `role_name`) VALUES
+(1, 'Community Leader'),
+(2, 'Community Coordinator'),
+(3, 'Event Manager'),
+(4, 'Community Media Manager'),
+(5, 'Community Member'),
+(6, 'Fundraising Head'),
+(7, 'Community Support Team'),
+(8, 'Trainer/Workshop Facilitator'),
+(9, 'Community Secretary'),
+(10, 'Community Advisor'),
+(11, 'Community Resource Manager'),
+(12, 'Community Welfare Manager');
 
 -- --------------------------------------------------------
 
@@ -477,7 +493,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `state_id` (`state_id`),
   KEY `city_id` (`city_id`),
   KEY `pincode_id` (`pincode_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `users`
@@ -485,11 +501,8 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 INSERT INTO `users` (`user_id`, `name`, `email`, `password`, `age`, `state_id`, `city_id`, `pincode_id`, `profile_picture`, `phone_number`) VALUES
 (11, 'Atharva Joshi', 'atharva@example.com', '$2y$10$Ag59YYHpH.E9I.gbDS.Z9.ehuyzjvmD1F6Ao9zafmMTUG70V5TRIK', 23, 1, 2, 4, 'uploads/profile_pictures/11_PP.jpg', '7350125844'),
-(12, 'Aniket', 'aniket@example.com', '$2y$10$1QGoqcxR0SZMBvkq9/J3pO5o1/8tHkxAPzV.WewxDk4LoAf2Z2UHu', 18, 1, 1, 2, NULL, ''),
-(13, 'Janhavi Dehadray', 'janhavi@example.com', '$2y$10$fuBsZFI3pjGeIS2Mis.z/OnTDyP9F7kiFY.dbl3IE3EbAP0XEDA0e', 23, 2, 4, 10, 'uploads/profile_pictures/13_jd PHOTO.jpg', '9730854431'),
-(15, 'Anupama Joshi', 'anupama@example.com', '$2y$10$QIt1p0YP4HUfhZf1qB6yvOcFgXpzJU5n8W7OIo/3mTiPQ1Ojl0cK2', 51, 1, 2, 4, NULL, ''),
-(16, 'Janhavi', 'janhavi31@example.com', '$2y$10$kx5/MFFpNHC/fWWXjYddcug9gghj7junc/3j2c5zbkbM5KNzBNbR.', 23, 1, 2, 6, 'uploads/profile_pictures/16_jd PHOTO.jpg', ''),
-(17, 'sahil joshi', 'sahil@example.com', '$2y$10$SNjvobqYWvx4YU6cyKFNLOAUvB8rfgIfe/HW7gefklXB0XpdFPfkG', 23, 1, 1, 1, '1738145241_pfp.jpg', '+917350125844');
+(12, 'Aniket', 'aniket@example.com', '$2y$10$1QGoqcxR0SZMBvkq9/J3pO5o1/8tHkxAPzV.WewxDk4LoAf2Z2UHu', 18, 1, 1, 2, 'uploads/profile_pictures/12_PP.jpg', '7842956310'),
+(21, 'demo user', 'demo@gmail.com', '$2y$10$yfPFoZSLDDhaqkWEYUoJtugkiaJBfubyrMuqDSJNICkMWgn1czEoy', 23, 1, 1, 1, 'uploads/profile_pictures/1738652718_signature.jpg', '1234567890');
 
 -- --------------------------------------------------------
 
@@ -517,7 +530,11 @@ INSERT INTO `user_interests` (`user_id`, `interest_ids`) VALUES
 (14, '2,7,9,10,12'),
 (15, '7,9,12,16'),
 (16, '1'),
-(17, '1,2');
+(17, '1,2'),
+(18, '9,12'),
+(19, '1'),
+(20, '1'),
+(21, '1');
 
 -- --------------------------------------------------------
 
@@ -545,7 +562,11 @@ INSERT INTO `user_skills` (`user_id`, `skill_ids`) VALUES
 (14, '1,2,3,4'),
 (15, '2,3,4'),
 (16, '4'),
-(17, '1,2,3,4');
+(17, '1,2,3,4'),
+(18, '5,6,11,13'),
+(19, '1'),
+(20, '1'),
+(21, '1,2,3,4');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

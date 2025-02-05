@@ -9,19 +9,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $age = $_POST['age'];
     $state_id = $_POST['state'];
     $city_id = $_POST['city'];
+    $phone = $_POST['phone'];
     $pincode_id = $_POST['pincode'];
 
     $profile_picture = '';
     if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
-        $uploads_dir = 'uploads/profile_pictures';
+        $uploads_dir = 'uploads/profile_pictures/';
         if (!is_dir($uploads_dir)) {
             mkdir($uploads_dir, 0777, true);
         }
         $file_name = time() . '_' . basename($_FILES['profile_picture']['name']); 
-        $target_file = "$uploads_dir/$file_name";
+        $target_file = $uploads_dir . $file_name;
 
         if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_file)) {
-            $profile_picture = $file_name;
+            $profile_picture = $target_file;
         } else {
             echo "<div class='alert alert-danger'>Error uploading profile picture.</div>";
         }
@@ -33,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($emailResult->num_rows > 0) {
         $result = "<div class='alert alert-danger'>Error: Email already exists. Please use a different email.</div>";
     } else {
-        $sql = "INSERT INTO users (name, email, password, age, state_id, city_id, pincode_id, profile_picture) 
-                VALUES ('$name', '$email', '$password', $age, $state_id, $city_id, $pincode_id, '$profile_picture')";
+        $sql = "INSERT INTO users (name, email, password, age, state_id, city_id, pincode_id, profile_picture,phone_number) 
+                VALUES ('$name', '$email', '$password', $age, $state_id, $city_id, $pincode_id, '$profile_picture','$phone')";
 
         if ($conn->query($sql) === TRUE) {
             $user_id = $conn->insert_id; 
@@ -103,6 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="email" class="form-label">Email:</label>
                     <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number:</label>
+                    <input type="number" id="phone" name="phone" class="form-control" required>
                 </div>
 
                 <div class="mb-3">

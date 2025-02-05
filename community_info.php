@@ -1,5 +1,7 @@
 <?php
 include('navbar.php');
+$showPopup = isset($_SESSION['show_popup']);
+unset($_SESSION['show_popup']);
 include 'connection.php';
 
 $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
@@ -37,27 +39,29 @@ if ($result->num_rows > 0) {
 
 $members_sql = "
     SELECT 
-    u.name, 
-    u.age,
-    u.profile_picture, 
-    s.state_name, 
-    c.city_name, 
-    p.pincode, 
-    GROUP_CONCAT(sk.skill_name ORDER BY sk.skill_name SEPARATOR ', ') AS skills
-FROM users u
-INNER JOIN cities c ON u.city_id = c.city_id
-INNER JOIN states s ON u.state_id = s.state_id
-INNER JOIN pincodes p ON u.pincode_id = p.pincode_id
-LEFT JOIN user_skills us ON u.user_id = us.user_id
-LEFT JOIN skills sk ON FIND_IN_SET(sk.skill_id, us.skill_ids)
-WHERE u.user_id IN (
-    SELECT user_id 
-    FROM community_members 
-    WHERE community_id = '$community_id'
-) AND u.user_id != '$admin_id'
-GROUP BY u.user_id, u.name, u.age, s.state_name, c.city_name, p.pincode
+        u.name, 
+        u.age,
+        u.profile_picture, 
+        s.state_name, 
+        c.city_name, 
+        p.pincode, 
+        GROUP_CONCAT(sk.skill_name ORDER BY sk.skill_name SEPARATOR ', ') AS skills,
+        r.role_name
+    FROM users u
+    INNER JOIN cities c ON u.city_id = c.city_id
+    INNER JOIN states s ON u.state_id = s.state_id
+    INNER JOIN pincodes p ON u.pincode_id = p.pincode_id
+    LEFT JOIN user_skills us ON u.user_id = us.user_id
+    LEFT JOIN skills sk ON FIND_IN_SET(sk.skill_id, us.skill_ids)
+    LEFT JOIN community_members cm ON u.user_id = cm.user_id
+    LEFT JOIN roles r ON cm.role_id = r.id
+    WHERE u.user_id IN (
+        SELECT user_id 
+        FROM community_members 
+        WHERE community_id = '$community_id'
+    ) AND u.user_id != '$admin_id'
+    GROUP BY u.user_id, u.name, u.age, s.state_name, c.city_name, p.pincode, r.role_name
 ";
-
 
 $members_result = $conn->query($members_sql);
 
@@ -197,15 +201,29 @@ $eventPhotosResult = $stmt->get_result();
                             <i class="bi bi-person-circle me-2">Organized by <strong><?php echo $community['organized_by'] ?></strong></i>
                         </li>
                     </ul>
+                    <?php
+                    // Check if the user has already sent a join request
+                    $sql_check_request = "SELECT * FROM request WHERE user_id = '$user_id' AND community_id = '$community_id' AND status = 0";
+                    $result_check_request = $conn->query($sql_check_request);
+                    $is_request_sent = ($result_check_request->num_rows > 0);
+                    ?>
+
                     <div class="mt-3">
                         <?php if ($is_creator): ?>
                             <a href="./community_admin_dashboard.php?community_id=<?php echo $community_id; ?>" class="btn btn-danger fw-bold">Admin</a>
+                        <?php elseif ($is_request_sent): ?>
+                            <p class="text-warning fw-bold">Request has been sent</p>
                         <?php elseif (!$is_member): ?>
-                            <a href="join_community.php?community_id=<?php echo $community_id; ?>" class="btn btn-primary fw-bold">Join this group</a>
+                            <!-- Button to trigger the modal -->
+                            <button class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#joinCommunityModal">
+                                Join this group
+                            </button>
                         <?php else: ?>
                             <p class="text-success fw-bold">You are a member of this community</p>
                         <?php endif; ?>
                     </div>
+
+
                 </div>
             </div>
         </div>
@@ -348,7 +366,9 @@ $eventPhotosResult = $stmt->get_result();
                         <?php if ($members_result->num_rows > 0): ?>
                             <?php while ($member = $members_result->fetch_assoc()): ?>
                                 <li class="list-group-item">
-                                    <h6 class="fw-bold"><?php echo htmlspecialchars($member['name']); ?></h6>
+                                    <h6 class="fw-bold"><?php echo htmlspecialchars($member['name']); ?>
+                                        <span class="badge bg-danger"><?php echo htmlspecialchars($member['role_name']); ?></span>
+                                    </h6>
                                     <img src="<?php echo $member['profile_picture']; ?>" alt="Profile Picture" class="profile-photo me-3">
                                     <p class="mb-0">
                                         <strong>Age:</strong> <?php echo htmlspecialchars($member['age']); ?><br>
@@ -426,6 +446,63 @@ $eventPhotosResult = $stmt->get_result();
             </div>
         </div>
     </div>
+
+    <!-- Modal popup for join community popup -->
+    <div class="modal fade" id="loginAlertModal" tabindex="-1" aria-labelledby="loginAlertLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginAlertLabel">Login Required</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Please log in to join a community.
+                </div>
+                <div class="modal-footer">
+                    <a href="user_login.php" class="btn btn-primary">Log In</a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- document upload modal form -->
+    <div class="modal fade" id="joinCommunityModal" tabindex="-1" aria-labelledby="joinCommunityLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="joinCommunityLabel">Join Community</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="join_community.php" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="community_id" value="<?php echo $community_id; ?>">
+
+                        <div class="mb-3">
+                            <label for="document" class="form-label">Upload Address Proof</label>
+                            <input type="file" class="form-control" name="document" required>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Submit Request</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- script for join community alert -->
+    <?php if ($showPopup): ?>
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var myModal = new bootstrap.Modal(document.getElementById('loginAlertModal'));
+                myModal.show();
+            });
+        </script>
+    <?php endif; ?>
 
     <script>
         const photoModal = document.getElementById('photoModal');

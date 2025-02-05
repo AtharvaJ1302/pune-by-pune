@@ -31,7 +31,7 @@ $formatted_event_date = $event_time_ist->format('l, jS F Y');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $event_id = intval($_POST['event_id']);
-    $user_id = intval($_SESSION['user_id']); // User is logged in
+    $user_id = intval($_SESSION['user_id']); 
     $domain = trim($_POST['domain']);
     $stream = trim($_POST['stream']);
 
@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $profile_photo = $user_data['profile_picture'];
     $pincode_id = $user_data['pincode_id'];
-    $mobile_number = $user_data['phone_number']; // Fetching mobile number from users table
+    $mobile_number = $user_data['phone_number']; 
 
     $insert_sql = "INSERT INTO event_attendees (event_id, user_id, domain, stream, profile_photo, pincode_id, mobile_number) 
                    VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -62,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 }
 
-$user_id = intval($_SESSION['user_id']);
+$user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 $event_id = intval($_GET['event_id']);
 
 // Check if the user has already registered
@@ -141,15 +141,24 @@ $is_registered = $result_check->num_rows > 0;
             <span><?php echo htmlspecialchars($event['event_name']); ?></span>
         </div>
 
-        <?php if ($is_registered): ?>
-            <button class="" style="background-color: green; color: black; font-weight: bold; border: none; padding: 10px 20px;">
-                Registered for Event
-            </button>
-        <?php else: ?>
-            <a href="#" class="btn" style="background-color: green; color: red; font-weight: bold; border: none; padding: 10px 20px;" data-bs-toggle="modal" data-bs-target="#attendModal">
-                Attend
-            </a>
-        <?php endif; ?>
+        <?php
+        $current_time = date('Y-m-d H:i:s');
+        $event_time = $event['event_time'];
+
+        if ($event_time > $current_time) {
+            if ($is_registered): ?>
+                <button class="" style="background-color: green; color: black; font-weight: bold; border: none; padding: 10px 20px;">
+                    Registered for Event
+                </button>
+            <?php else: ?>
+                <a href="#" class="btn" style="background-color: green; color: red; font-weight: bold; border: none; padding: 10px 20px;" data-bs-toggle="modal" data-bs-target="#attendModal">
+                    Attend
+                </a>
+        <?php endif;
+        } else {
+            echo '<button class="btn btn-secondary" style="color: black !important;" disabled>Event Ended</button>';;
+        }
+        ?>
     </div>
 
 

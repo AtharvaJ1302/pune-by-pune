@@ -1,4 +1,6 @@
-<?php session_start(); ?> <!-- Start session at the top -->
+<?php 
+session_start(); 
+?> <!-- Start session at the top -->
 <!DOCTYPE html>
 <html lang="en">
 
