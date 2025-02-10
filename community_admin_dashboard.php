@@ -275,7 +275,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
         .id-card {
             width: 250px;
             border: 2px solid #007bff;
-            border-radius: 10px;
+            /* border-radius: 10px; */
             padding: 15px;
             text-align: center;
             background: #f9f9f9;
@@ -535,9 +535,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                                         <h5 class="card-title"><?php echo htmlspecialchars($event['event_name']); ?></h5>
                                         <p><strong>Event Time:</strong> <?php echo date('d M Y h:i A', strtotime($event['event_time'])); ?></p>
                                     </div>
-                                    <div class="ms-3 mb-3">
+                                    <!-- <div class="ms-3 mb-3">
                                         <a href="" class="btn btn-danger">End Event</a>
-                                    </div>
+                                    </div> -->
                                 </div>
 
                             </div>
@@ -638,7 +638,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                             <tr>
                                 <td><?php echo htmlspecialchars($row['name']); ?></td>
                                 <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                <td><?php echo htmlspecialchars($row['skill_names']); ?></td> <!-- Shows all skills -->
+                                <td><?php echo htmlspecialchars($row['skill_names']); ?></td> 
                                 <td><?php echo htmlspecialchars($row['city_name']); ?></td>
                                 <td><?php echo htmlspecialchars($row['pincode']); ?></td>
                                 <td>

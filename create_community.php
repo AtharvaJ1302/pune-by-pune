@@ -10,6 +10,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $organized_by = $_POST['organized_by'];
     $location = $_POST['location']; 
 
+    // Fetch pincode_id from users table
+    $pincode_id = null;
+    $pincode_query = "SELECT pincode_id FROM users WHERE user_id = '$user_id'";
+    $pincode_result = $conn->query($pincode_query);
+
+    if ($pincode_result->num_rows > 0) {
+        $row = $pincode_result->fetch_assoc();
+        $pincode_id = $row['pincode_id'];
+    }
+
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $imageTmpName = $_FILES['image']['tmp_name'];
         $imageName = basename($_FILES['image']['name']);
@@ -17,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $imagePath = $imageFolder . $imageName;
 
         if (move_uploaded_file($imageTmpName, $imagePath)) {
-            $sql = "INSERT INTO communities (community_name, community_description, image_path, user_id, admin, organized_by, location)
-                    VALUES ('$community_name', '$community_description', '$imagePath', '$user_id', TRUE, '$organized_by', '$location')";
+            $sql = "INSERT INTO communities (community_name, community_description, image_path, user_id, admin, organized_by, location, pincode_id)
+                    VALUES ('$community_name', '$community_description', '$imagePath', '$user_id', TRUE, '$organized_by', '$location', '$pincode_id')";
 
             if ($conn->query($sql) === TRUE) {
                 echo "<script>alert('Community Created');</script>";
@@ -34,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 
 
 <!DOCTYPE html>

@@ -256,41 +256,42 @@ if ($row = $userSkillResult->fetch_assoc()) {
 
     <!-- Profile Section -->
     <div class="container mt-5 mb-5">
-        <div class="row">
-            <!-- Profile Section -->
-            <div class="col-md-6">
-                <div class="card shadow-lg">
-                    <div class="card-body text-center">
-                        <img src="<?php echo ($profile_photo); ?>" alt="Profile Picture" class="profile-picture mb-3">
-                        <h2><?php echo htmlspecialchars($name); ?></h2>
-                        <p class="text-muted"> <?php echo htmlspecialchars($email); ?></p>
-                        <p class="text-muted"> Age: <?php echo htmlspecialchars($age); ?></p>
-                        <p class="text-muted"> State: <?php echo htmlspecialchars($state); ?></p>
-                        <p class="text-muted"> City: <?php echo htmlspecialchars($city); ?></p>
-                        <p class="text-muted"> Pincode: <?php echo htmlspecialchars($pincode); ?></p>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile</button>
-                    </div>
+    <div class="row">
+        <!-- Profile Section -->
+        <div class="col-md-6 mb-4 mb-md-0"> 
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <img src="<?php echo ($profile_photo); ?>" alt="Profile Picture" class="profile-picture mb-3">
+                    <h2><?php echo htmlspecialchars($name); ?></h2>
+                    <p class="text-muted"> <?php echo htmlspecialchars($email); ?></p>
+                    <p class="text-muted"> Age: <?php echo htmlspecialchars($age); ?></p>
+                    <p class="text-muted"> State: <?php echo htmlspecialchars($state); ?></p>
+                    <p class="text-muted"> City: <?php echo htmlspecialchars($city); ?></p>
+                    <p class="text-muted"> Pincode: <?php echo htmlspecialchars($pincode); ?></p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">Edit Profile</button>
                 </div>
             </div>
-            <!-- Skills and Interests Sections -->
-            <div class="col-md-6">
-                <div class="card shadow-lg mb-3">
-                    <div class="card-body">
-                        <h5>Interests</h5>
-                        <p class="text-muted" id="interests-text"> <?php echo htmlspecialchars($interest_text); ?></p>
-                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editInterestsModal">Edit Interests</button>
-                    </div>
+        </div>
+        <!-- Skills and Interests Sections -->
+        <div class="col-md-6">
+            <div class="card shadow-lg mb-3">
+                <div class="card-body">
+                    <h5>Interests</h5>
+                    <p class="text-muted" id="interests-text"> <?php echo htmlspecialchars($interest_text); ?></p>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editInterestsModal">Edit Interests</button>
                 </div>
-                <div class="card shadow-lg">
-                    <div class="card-body">
-                        <h5>Skills</h5>
-                        <p class="text-muted" id="skills-text"> <?php echo htmlspecialchars($skill_text); ?></p>
-                        <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editSkillsModal">Edit Skills</button>
-                    </div>
+            </div>
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <h5>Skills</h5>
+                    <p class="text-muted" id="skills-text"> <?php echo htmlspecialchars($skill_text); ?></p>
+                    <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#editSkillsModal">Edit Skills</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
 
     <!-- Profile Edit Modal -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">

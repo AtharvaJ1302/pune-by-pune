@@ -135,7 +135,7 @@ $eventPhotosResult = $stmt->get_result();
     .photo-container {
         width: 100%;
         height: 250px;
-        overflow: hidden;
+        /* overflow: hidden; */
         display: flex;
         justify-content: center;
         align-items: center;
@@ -256,7 +256,7 @@ $eventPhotosResult = $stmt->get_result();
                     <h5 class="fw-bold">Community Events</h5>
 
                     <div class="row mt-4">
-                        <div class="col-md-4">
+                        <div class="col-md-4 mb-3 mb-md-0">
                             <ul class="list-group">
                                 <li class="list-group-item active tab-option" id="upcoming-tab">Upcoming Events</li>
                                 <li class="list-group-item tab-option" id="past-tab">Past Events</li>
@@ -268,7 +268,7 @@ $eventPhotosResult = $stmt->get_result();
                                 <?php
                                 $current_time = date('Y-m-d H:i:s');
                                 $upcomingQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
-                                    (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
+                                (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
                                 FROM events e
                                 WHERE e.event_time > ? AND e.community_id = ?
                                 ORDER BY e.event_time ASC";
@@ -311,7 +311,7 @@ $eventPhotosResult = $stmt->get_result();
                             <div id="past-events" style="display: none;">
                                 <?php
                                 $pastQuery = "SELECT e.event_id, e.event_name, e.event_description, e.event_time, 
-                                    (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
+                                (SELECT COUNT(*) FROM event_attendees WHERE event_attendees.event_id = e.event_id) AS attendees_count
                                 FROM events e
                                 WHERE e.event_time <= ? AND e.community_id = ?
                                 ORDER BY e.event_time DESC";
@@ -351,6 +351,7 @@ $eventPhotosResult = $stmt->get_result();
                                 ?>
                             </div>
                         </div>
+
                     </div>
                 </div>
 

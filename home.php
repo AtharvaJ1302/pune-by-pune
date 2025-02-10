@@ -16,9 +16,8 @@ $resultDomain = $conn->query($domains);
 
 $eventsQuery = "
     SELECT event_id, event_name, event_description, event_time
-    FROM events
-    WHERE event_time >= NOW()  -- Only events from the current time onward
-    ORDER BY event_time ASC   -- Order events in ascending order (upcoming events first)
+    FROM events  -- Only events from the current time onward
+    ORDER BY event_time DESC   -- Order events in ascending order (upcoming events first)
     LIMIT 6
 ";
 
@@ -164,6 +163,53 @@ if (!$eventResult) {
             /* Light Green for upcoming */
             color: black;
         }
+
+        .mobile-slider-container {
+            overflow-x: auto;
+            position: relative;
+            scrollbar-width: thin;
+            /* Firefox */
+            scrollbar-color: #888 #f1f1f1;
+        }
+
+        /* The actual slider */
+        #mobile-slider {
+            display: flex;
+            gap: 10px;
+            white-space: nowrap;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            padding-bottom: 10px;
+            /* Space for the scrollbar */
+        }
+
+        /* Individual slide */
+        .community-slide {
+            width: 80%;
+            flex: 0 0 auto;
+        }
+
+        /* Scrollbar Styles */
+        .mobile-slider-container::-webkit-scrollbar {
+            height: 6px;
+            /* Adjust scrollbar thickness */
+        }
+
+        .mobile-slider-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            /* Light grey track */
+        }
+
+        .mobile-slider-container::-webkit-scrollbar-thumb {
+            background: #888;
+            /* Dark grey scrollbar */
+            border-radius: 10px;
+        }
+
+        .mobile-slider-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+            /* Darker scrollbar on hover */
+        }
     </style>
 </head>
 
@@ -229,7 +275,7 @@ if (!$eventResult) {
                         <h2 class="mb-0">Communities</h2>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row d-none d-md-flex"> <!-- Desktop Grid View -->
                             <?php
                             $limit = 6;
                             $counter = 0;
@@ -260,6 +306,31 @@ if (!$eventResult) {
                                 <p>No communities are available.</p>
                             <?php endif; ?>
                         </div>
+
+                        <!-- Mobile View - Smooth Auto Scroll with Bottom Scrollbar -->
+                        <div class="d-md-none mobile-slider-container">
+                            <div id="mobile-slider">
+                                <?php
+                                $result->data_seek(0); // Reset pointer for the second loop
+                                while ($row = $result->fetch_assoc()) :
+                                ?>
+                                    <div class="community-slide">
+                                        <a href="community_info.php?community_id=<?php echo $row['community_id']; ?>" class="community-card">
+                                            <div class="card">
+                                                <img src="<?php echo $row['image_path']; ?>" class="card-img-top community-image" alt="Community Image" style="object-fit: contain; width: 90%; height: 90%; border-radius: 15px;">
+                                                <div class="card-body">
+                                                    <h5 class="card-title"><?php echo $row['community_name']; ?></h5>
+                                                    <p class="card-text"><?php echo $row['community_description']; ?></p>
+                                                    <div>
+                                                        <span class="badge bg-primary"><?php echo $row['member_count']; ?> members</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                <?php endwhile; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -269,12 +340,12 @@ if (!$eventResult) {
                         <h2 class="mb-0">Upcoming Events</h2>
                     </div>
                     <div class="card-body">
-                        <div id="eventSlider" class="d-flex overflow-auto gap-3" style="white-space: nowrap; scroll-behavior: smooth;">
+                        <div id="eventSlider" class="d-flex gap-3" style="overflow-x: auto; overflow-y: hidden; white-space: nowrap; scroll-behavior: smooth; padding-bottom: 10px;">
                             <?php
                             if ($eventResult->num_rows > 0):
                                 while ($row = $eventResult->fetch_assoc()):
                                     $formatted_time = date('D, M j, Y, g:i A ', strtotime($row['event_time']));
-                                    $colors = ['#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'];
+                                    $colors = ['#FFEB3B'];
                                     $random_color = $colors[array_rand($colors)];
                             ?>
                                     <a href="event_info.php?event_id=<?php echo $row['event_id']; ?>" class="text-decoration-none">
@@ -297,8 +368,6 @@ if (!$eventResult) {
                         </div>
                     </div>
                 </div>
-
-
 
 
                 <div class="container my-4">
@@ -359,22 +428,46 @@ if (!$eventResult) {
 
         const slider = document.getElementById("eventSlider");
 
+        slider.innerHTML += slider.innerHTML;
 
         function autoScroll() {
             if (slider.scrollLeft >= slider.scrollWidth / 2) {
                 slider.scrollLeft = 0;
             }
-
             slider.scrollBy({
                 left: 1,
                 behavior: "smooth"
             });
         }
 
-        let autoScrollInterval = setInterval(autoScroll, 30);
+        let autoScrollInterval = setInterval(autoScroll, 15);
 
         slider.addEventListener("mouseenter", () => clearInterval(autoScrollInterval));
         slider.addEventListener("mouseleave", () => autoScrollInterval = setInterval(autoScroll, 30));
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const slider = document.getElementById("mobile-slider");
+
+            // Duplicate content for seamless looping
+            slider.innerHTML += slider.innerHTML;
+
+            function autoScroll() {
+                if (slider.scrollLeft >= slider.scrollWidth / 2) {
+                    slider.scrollLeft = 0;
+                }
+                slider.scrollBy({
+                    left: 1,
+                    behavior: "smooth"
+                });
+            }
+
+            let autoScrollInterval = setInterval(autoScroll, 10);
+
+            slider.addEventListener("mouseenter", () => clearInterval(autoScrollInterval));
+            slider.addEventListener("mouseleave", () => autoScrollInterval = setInterval(autoScroll, 30));
+        });
     </script>
 </body>
 

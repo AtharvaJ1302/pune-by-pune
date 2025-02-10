@@ -23,7 +23,7 @@ if (isset($_GET['event_id'])) {
     die("Invalid event ID.");
 }
 
-date_default_timezone_set('Asia/Kolkata');
+date_default_timezone_set('UTC');
 
 $event_time_ist = new DateTime($event['event_time']);
 $formatted_event_time = $event_time_ist->format('h:i A');
@@ -143,7 +143,7 @@ $is_registered = $result_check->num_rows > 0;
 
         <?php
         $current_time = date('Y-m-d H:i:s');
-        $event_time = $event['event_time'];
+        $event_time = date('Y-m-d H:i:s', strtotime($event['event_time'])); // Convert event time to UTC
 
         if ($event_time > $current_time) {
             if ($is_registered): ?>

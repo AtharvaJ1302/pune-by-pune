@@ -37,7 +37,8 @@
                 <div class="col-6 col-md-3 mb-3">
                     <h6>Discover</h6>
                     <ul class="list-unstyled">
-                        <li><a href="#" class="text-light text-decoration-none">Groups</a></li>
+                        <li><a href="all_communities.php" class="text-light text-decoration-none">Communities</a></li>
+                        <li><a href="all_events.php" class="text-light text-decoration-none">Events</a></li>
                     </ul>
                 </div>
 
@@ -45,8 +46,8 @@
                 <div class="col-6 col-md-3 mb-3">
                     <h6>Pune By Pune</h6>
                     <ul class="list-unstyled">
-                        <li><a href="#" class="text-light text-decoration-none">About</a></li>
-                        <li><a href="#" class="text-light text-decoration-none">Contact Us</a></li>
+                        <li><a href="about_us.php" class="text-light text-decoration-none">About</a></li>
+                        <li><a href="contact_us.php" class="text-light text-decoration-none">Contact Us</a></li>
                     </ul>
                 </div>
 
@@ -61,10 +62,6 @@
                             <li class="list-inline-item"><a href="#" class="text-light"><i class="fab fa-instagram"></i> Instagram</a></li>
                         </ul>
 
-                    </div>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="#" class="btn btn-outline-light btn-sm">Get it on Google Play</a>
-                        <a href="#" class="btn btn-outline-light btn-sm">Download on the App Store</a>
                     </div>
                 </div>
             </div>

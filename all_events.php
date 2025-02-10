@@ -6,7 +6,7 @@ $sql = "SELECT event_id, event_name, event_description, event_time FROM events O
 $eventResult = $conn->query($sql);
 
 $colors = [
-   '#FFEB3B', '#8BC34A', '#00BCD4', '#FF5722', '#FFC107', '#4CAF50', '#FF9800'
+   '#FFEB3B'
 ];
 ?>
 
