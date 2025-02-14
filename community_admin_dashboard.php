@@ -189,7 +189,7 @@ while ($row = $result_requests->fetch_assoc()) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
     $user_id = intval($_POST['user_id']);
     $role = $conn->real_escape_string($_POST['id']);
-    
+
     // Check if the role already exists for the user in the community
     $check_sql = "SELECT * FROM community_members WHERE user_id = ? AND community_id = ?";
     $check_stmt = $conn->prepare($check_sql);
@@ -214,7 +214,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
     }
 }
 
-
+$eventPhotosSql = "SELECT ep.event_id, ep.photos, e.event_name 
+        FROM event_photos ep
+        JOIN events e ON ep.event_id = e.event_id
+        WHERE ep.community_id = ?";
+$stmt = $conn->prepare($eventPhotosSql);
+$stmt->bind_param("i", $community_id);
+$stmt->execute();
+$eventPhotosResult = $stmt->get_result();
 
 ?>
 
@@ -305,6 +312,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
 
         #photos {
             width: 250px;
+        }
+
+        .photo-container {
+            width: 100%;
+            height: 250px;
+            /* overflow: hidden; */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .event-section {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .photo-row {
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+        .photo-card {
+            width: 300px;
         }
     </style>
     <script src="./ckeditor/ckeditor.js"></script>
@@ -582,12 +620,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                     <select name="id" id="id" class="form-select" required>
                         <option value="">-- Select a Role --</option>
                         <?php
-                                    $role_query = "SELECT id, role_name FROM roles";
-                                    $role_result = $conn->query($role_query);
-                                    while ($role = $role_result->fetch_assoc()) {
-                                        echo "<option value='{$role['id']}'>{$role['role_name']}</option>";
-                                    }
-                                ?>
+                        $role_query = "SELECT id, role_name FROM roles";
+                        $role_result = $conn->query($role_query);
+                        while ($role = $role_result->fetch_assoc()) {
+                            echo "<option value='{$role['id']}'>{$role['role_name']}</option>";
+                        }
+                        ?>
                     </select>
                 </div>
 
@@ -616,6 +654,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
 
                 <button type="submit" class="btn btn-primary">Upload</button>
             </form>
+
+            <div class="tab-pane mb-5" role="tabpanel" aria-labelledby="photos-tab">
+                <h5 class="fw-bold">Photos</h5>
+
+                <div class="d-flex flex-column gap-3">
+                    <?php
+                    $events = [];
+                    while ($row = $eventPhotosResult->fetch_assoc()) {
+                        $events[$row['event_name']][] = explode(',', $row['photos']);
+                    }
+
+                    foreach ($events as $eventName => $photoGroups) {
+                    ?>
+                        <div class="event-section">
+                            <h5 class="text-center fw-bold"><?php echo htmlspecialchars($eventName); ?></h5>
+                            <div class="d-flex overflow-auto photo-row" style="scroll-snap-type: x mandatory;">
+                                <?php
+                                foreach ($photoGroups as $photos) {
+                                    foreach ($photos as $photo) {
+                                ?>
+                                        <div class="photo-card" style="flex: 0 0 auto; margin-right: 10px; scroll-snap-align: start;">
+                                            <div class="card mb-3">
+                                                <div class="photo-container">
+                                                    <img src="<?php echo htmlspecialchars($photo); ?>" class="card-img-top" alt="Event Photo" data-bs-toggle="modal" data-bs-target="#photoModal" data-bs-img-src="<?php echo htmlspecialchars($photo); ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+                                <?php
+                                    }
+                                }
+                                ?>
+                            </div>
+                        </div>
+                    <?php
+                    }
+                    ?>
+                </div>
+            </div>
+
         </div>
 
         <div id="manage_requests" class="section mt-4">
@@ -638,7 +715,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                             <tr>
                                 <td><?php echo htmlspecialchars($row['name']); ?></td>
                                 <td><?php echo htmlspecialchars($row['email']); ?></td>
-                                <td><?php echo htmlspecialchars($row['skill_names']); ?></td> 
+                                <td><?php echo htmlspecialchars($row['skill_names']); ?></td>
                                 <td><?php echo htmlspecialchars($row['city_name']); ?></td>
                                 <td><?php echo htmlspecialchars($row['pincode']); ?></td>
                                 <td>
@@ -687,6 +764,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                 </div>
                 <div class="modal-body text-center">
                     <iframe id="documentFrame" src="" width="100%" height="500px" style="border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="modal-photo" src="<?php echo htmlspecialchars($photo); ?>" class="img-fluid" alt="Full-size Event Photo">
                 </div>
             </div>
         </div>
@@ -899,6 +989,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['assign_role'])) {
                 URL.revokeObjectURL(blobUrl); // Free up memory
             }).catch(error => console.error("Error generating ZIP file:", error));
         }
+    </script>
+    <script>
+        const photoModal = document.getElementById('photoModal');
+        const modalImage = document.getElementById('modal-photo');
+
+        photoModal.addEventListener('show.bs.modal', function(event) {
+            const imgSrc = event.relatedTarget.getAttribute('data-bs-img-src');
+            modalImage.src = imgSrc;
+        });
     </script>
 </body>
 
